@@ -1,0 +1,36 @@
+{
+  "name": "jumplens",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JumpLens 單機側拍跳躍分析（Live 即時 + 動作捕捉後即時分析 + 信效度模擬驗證）",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup-mediapipe.mjs",
+    "predev": "node scripts/setup-mediapipe.mjs",
+    "dev": "vite",
+    "dev:phone": "node scripts/setup-mediapipe.mjs && vite --host --mode phone",
+    "prebuild": "node scripts/setup-mediapipe.mjs",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && vitest run",
+    "validate": "tsx validation/run.ts"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.1.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

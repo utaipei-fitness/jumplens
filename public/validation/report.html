@@ -1,0 +1,365 @@
+<title>JumpLens 信效度驗證報告</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column (report), wide figure rows that break out to 2–3 columns; numbers in mono */
+:root {
+  --bg: #f5f6f4;
+  --paper: #ffffff;
+  --ink: #1b2024;
+  --muted: #5b646b;
+  --rule: #dde1de;
+  --accent: #1f5f8b;      /* lab blue */
+  --signal: #c2561a;      /* LoA / threshold lines */
+  --ok: #2f7a4b; --ok-bg: #e6f2ea;
+  --warn: #9a6a0b; --warn-bg: #fbf1dc;
+  --fail: #a93226; --fail-bg: #f9e4e1;
+  --dot: rgba(31, 95, 139, 0.42);
+  --f-display: 'Noto Serif TC', 'Songti TC', serif;
+  --f-body: 'Noto Sans TC', 'PingFang TC', system-ui, sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121517; --paper: #1a1e21; --ink: #e5e8e6; --muted: #9aa3a8; --rule: #2c3236;
+    --accent: #7db4dc; --signal: #f08a4b; --ok: #6fcf95; --ok-bg: #16281e; --warn: #e9b949; --warn-bg: #2b2412;
+    --fail: #f08074; --fail-bg: #331b18; --dot: rgba(125, 180, 220, 0.5); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121517; --paper: #1a1e21; --ink: #e5e8e6; --muted: #9aa3a8; --rule: #2c3236;
+  --accent: #7db4dc; --signal: #f08a4b; --ok: #6fcf95; --ok-bg: #16281e; --warn: #e9b949; --warn-bg: #2b2412;
+  --fail: #f08074; --fail-bg: #331b18; --dot: rgba(125, 180, 220, 0.5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.7 var(--f-body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+.prose { max-width: 68ch; }
+header { display: grid; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 24px; }
+.eyebrow { font: 500 12px/1 var(--f-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 700 clamp(28px, 4.4vw, 40px)/1.25 var(--f-display); margin: 0; text-wrap: balance; }
+h2 { font: 700 23px/1.35 var(--f-display); margin: 0; text-wrap: balance; }
+h3 { font: 700 16px/1.4 var(--f-body); margin: 0; }
+p { margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font: 13px/1.5 var(--f-data); color: var(--muted); }
+section { display: grid; gap: 18px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head .num { font: 500 12px/1 var(--f-data); color: var(--muted); letter-spacing: 0.08em; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.mono, td.n, .stat b { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.verdict { background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 20px 22px; display: grid; gap: 12px; }
+.verdict ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.stat { background: var(--paper); padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+.stat span { font-size: 13px; color: var(--muted); }
+.stat b { font-size: 28px; font-weight: 500; line-height: 1.2; }
+.stat small { font-size: 12.5px; color: var(--muted); font-family: var(--f-data); }
+.tbl { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em; background: var(--bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n { white-space: nowrap; }
+td .sub { display: block; font-size: 12px; color: var(--muted); }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--paper); border: 1px solid var(--rule); padding: 14px 14px 10px; display: grid; gap: 6px; min-width: 0; }
+figcaption { font-size: 13px; color: var(--muted); }
+figure .t { font-weight: 700; font-size: 14px; }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { fill: var(--muted); font: 10.5px var(--f-data); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+.pill { display: inline-block; font: 500 12px/1.6 var(--f-data); padding: 0 8px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.fail { background: var(--fail-bg); color: var(--fail); }
+.issues { display: grid; gap: 12px; }
+.issue { background: var(--paper); border: 1px solid var(--rule); padding: 16px 18px; display: grid; gap: 6px; }
+.issue .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.note { background: var(--warn-bg); border: 1px solid var(--rule); padding: 14px 18px; font-size: 15px; }
+footer { border-top: 1px solid var(--rule); padding-top: 16px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+code { font-family: var(--f-data); font-size: 0.92em; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">JumpLens · Internal validation · Simulation study</div>
+    <h1>JumpLens 單機側拍跳躍分析：信效度驗證報告</h1>
+    <p class="prose muted">在已知真值的合成跳躍上，檢驗事件偵測、跳躍高度、GCT、RSI 等指標的準確度（效度）與重複性（信度），並找出正式真人驗證前需要調整的門檻。</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <h2>結論</h2>
+      <ul id="verdict"></ul>
+      <p class="small muted">這是內部模擬驗證：它證明演算法在已知真值下的表現，<b>不能取代</b>真人實測（Kinovea 人工標記、力板或 My Jump Lab、跨日重測）。真人驗證完成前，系統輸出應稱為「估計值」。</p>
+    </div>
+    <div class="stats" id="kpis"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">METHOD</span><h2>方法</h2></div>
+    <div class="prose" style="display:grid;gap:12px">
+      <p><b>合成跳躍模型。</b>以二維矢狀面連桿模型產生 CMJ、SJ、DJ：髖部垂直軌跡分段描述（靜止 → 下蹲 → 推蹬 → 拋物線滯空 → 緩衝 → 靜止），足部以腳尖為支點做蹠屈，膝關節以反運動學求得。每筆試跳隨機抽取身高（155–195 cm）、跳躍高度、下蹲深度、推蹬時間、腳尖離地速度爬升時間（4–15 ms）、SJ 保持膝角、DJ 箱高（30 / 40 cm）與 GCT（170–320 ms）。真實起跳、落地與觸地時刻是連續時間，不受取樣影響。</p>
+      <p><b>取樣與雜訊。</b>依指定幀率取樣（隨機相位），每個關鍵點加入白雜訊、低頻相關漂移（τ = 0.1 s）、偶發離群值與 1–4 幀遺失。正式拍攝條件的關鍵點雜訊約 0.58 cm（約 2 px，以 4.5 m 距離、約 3 mm/px 估算）。</p>
+      <p><b>受測程式。</b>與網頁使用的分析程式完全相同：短缺口內插、Hampel 去離群、四階零相位 Butterworth（事件 20 Hz、角度 12 Hz）、從空中最高點往兩側找起跳與落地、亞幀內插、偏差修正、高度 h = g·t<sub>f</sub>²/8。</p>
+      <p><b>統計。</b>效度以 Bland–Altman（偏差、95% 一致性界限）、ICC(A,1)（絕對一致，95% CI 以 1,000 次 bootstrap 估計）、MAE 與 Pearson r 表示。信度以 ICC、SEM = √MSE、MDC<sub>95</sub> = 1.96·√2·SEM 表示。參考值為模擬真值的滯空時間法高度，等同力板滯空時間法。ICC 程式已用 Shrout &amp; Fleiss (1979) 範例資料驗證（ICC(A,1) = 0.29、ICC(C,1) = 0.71）。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">1 · VALIDITY</span><h2>效標效度：240 fps 正式拍攝</h2></div>
+    <p class="prose small muted" id="validity-n"></p>
+    <div class="tbl"><table id="t-validity"></table></div>
+    <div class="figs" id="ba"></div>
+    <h3>次要指標</h3>
+    <div class="tbl"><table id="t-secondary"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">2 · BIAS CORRECTION</span><h2>SPEC 8.2 偏差修正的效果</h2></div>
+    <p class="prose">足部高度穿越閾值的時刻在真正離地之後、真正觸地之前，所以不修正會讓滯空時間變短、高度低估。以穿越處足部速度反推（t = t<sub>cross</sub> ∓ thr / |v|）可以消除這個系統誤差。</p>
+    <div class="two">
+      <figure><div class="t">高度偏差（%，系統 − 真值）</div><div id="fig-bias"></div><figcaption>每項 n = 150，同一批試跳只切換修正開關。</figcaption></figure>
+      <div class="tbl"><table id="t-bias"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">3 · FRAME RATE</span><h2>幀率敏感度</h2></div>
+    <p class="prose">同一批動作分別以 240、120、60、30 fps 取樣。低於 60 fps 時系統依規格不顯示 GCT 與 RSI。</p>
+    <div class="two">
+      <figure><div class="t">跳躍高度平均絕對誤差（cm）</div><div id="fig-fps"></div><figcaption id="fps-legend"></figcaption></figure>
+      <div class="tbl"><table id="t-fps"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">4 · RELIABILITY</span><h2>信度</h2></div>
+    <h3>(a) 儀器重複性</h3>
+    <p class="prose small muted">30 名模擬受試者，同一個真實動作做兩次獨立取樣與雜訊，等同兩套相同系統同時拍攝。只反映量測系統本身的誤差。</p>
+    <div class="tbl"><table id="t-inst"></table></div>
+    <h3>(b) 跨日重測</h3>
+    <p class="prose small muted" id="tr-assume"></p>
+    <div class="tbl"><table id="t-tr"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">5 · VALIDITY RULES</span><h2>有效性規則的判斷</h2></div>
+    <div class="two">
+      <figure><div class="t">SJ 反向動作：判為無效的比率</div><div id="fig-cm"></div><figcaption>橫軸為起跳前真實髖下沉量；虛線為規格門檻 2 cm。每點 n = 40。</figcaption></figure>
+      <div class="tbl"><table id="t-hold"></table></div>
+    </div>
+    <div class="two">
+      <div class="tbl"><table id="t-tuck"></table></div>
+      <div class="tbl"><table id="t-scale"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">6 · ROBUSTNESS</span><h2>雜訊敏感度與真實影片</h2></div>
+    <div class="tbl"><table id="t-noise"></table></div>
+    <p class="prose small" id="real"></p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">7 · DECISIONS NEEDED</span><h2>模擬發現、需要決定的事</h2></div>
+    <p class="prose small muted">規格門檻都沒有改動。以下是模擬顯示需要以前測資料調整，或需要研究者決定的地方。</p>
+    <div class="issues" id="issues"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">8 · NEXT</span><h2>限制與真人驗證計畫</h2></div>
+    <div class="prose" style="display:grid;gap:10px">
+      <ul style="margin:0;padding-left:20px;display:grid;gap:6px">
+        <li>模擬雜訊是獨立、近似高斯的；真實姿態估計在腳部遮擋、鞋子、光線變化時誤差更大，且可能有系統性偏移。</li>
+        <li>「滯空法高度」對比「真實髖上升」的差異取決於落地姿勢模型；本模型中伸直落地約低估 1.3 cm，收腿 5 cm 以上轉為高估。</li>
+        <li>跨日重測的生物變異（跨日 CV 4%、試跳間 CV 3%）是假設值，ICC 絕對值不應引用；可參考的是系統額外增加的 SEM。</li>
+        <li>瀏覽器版以 MediaPipe 取代 Sports2D；iPhone 慢動作檔經瀏覽器選取後是否保留 240 fps 尚未用真機確認。</li>
+      </ul>
+      <p><b>建議的真人驗證（SPEC 12.1）：</b>前 20–30 筆以 Kinovea 逐幀標記起跳與落地，和自動值做 Bland–Altman；同一批試跳以力板或 My Jump Lab 為參考算 ICC；同一受試者不同日重測算 ICC、SEM、MDC；網頁「總覽 → 驗證配對資料」可直接匯出自動與人工事件配對。</p>
+    </div>
+  </section>
+
+  <footer>
+    <span id="foot"></span>
+    <span>重跑：在 <code>jumplens/</code> 執行 <code>npm run validate</code>，再 <code>node validation/make-report.mjs</code>。</span>
+  </footer>
+</div>
+
+<script>
+const D = {"generated":"2026-10-27T06:15:50.474Z","n_per_condition":150,"formula":{"flight_0_5s_cm":30.66,"expected_cm":30.66,"pass":true},"validity":{"CMJ":{"n":150,"analysable":1,"status":{"OK":0.707,"Warning":0.293,"Fail":0},"height_vs_flight_truth":{"n":150,"bias":0,"sd":0.82,"loaLow":-1.61,"loaHigh":1.61,"propSlope":0.0183,"mae":0.62,"rmse":0.82,"r":0.9965},"height_vs_flight_truth_icc":0.9964,"height_icc_ci":[0.9947,0.9975],"height_vs_com_truth":{"n":150,"bias":-1.34,"sd":1.03,"loaLow":-3.37,"loaHigh":0.68,"propSlope":-0.002,"mae":1.46,"rmse":1.69,"r":0.9943},"takeoff_err_ms":{"mean":3.07,"sd":4.5},"landing_err_ms":{"mean":2.86,"sd":3.89},"detectorB_takeoff_err_ms":{"mean":8.15,"sd":5.16},"detectorB_landing_err_ms":{"mean":-0.52,"sd":3.84},"flight_err_ms":{"mean":-0.2,"sd":6.03},"warnings":{"detectors_disagree":0.293,"hip_vs_flight":0,"landing_knee":0.033},"depth_cm":{"n":150,"bias":0.24,"sd":0.35,"loaLow":-0.46,"loaHigh":0.93,"propSlope":0.0027,"mae":0.35,"rmse":0.42,"r":0.9975},"time_to_takeoff_ms":{"n":150,"bias":-19.3,"sd":22.4,"loaLow":-63.3,"loaHigh":24.6,"propSlope":0.0042,"mae":25.4,"rmse":29.6,"r":0.9507},"rsi_mod":{"n":150,"bias":0.012,"sd":0.02,"loaLow":-0.027,"loaHigh":0.051,"propSlope":0.045,"mae":0.018,"rmse":0.023,"r":0.9911},"rsi_mod_icc":0.9865},"SJ":{"n":150,"analysable":1,"status":{"OK":0.813,"Warning":0.173,"Fail":0.013},"height_vs_flight_truth":{"n":150,"bias":-0.18,"sd":0.68,"loaLow":-1.51,"loaHigh":1.15,"propSlope":0.0009,"mae":0.55,"rmse":0.7,"r":0.9957},"height_vs_flight_truth_icc":0.9955,"height_icc_ci":[0.9941,0.9966],"height_vs_com_truth":{"n":150,"bias":-1.41,"sd":0.87,"loaLow":-3.12,"loaHigh":0.3,"propSlope":-0.0211,"mae":1.48,"rmse":1.66,"r":0.9933},"takeoff_err_ms":{"mean":3.55,"sd":4.54},"landing_err_ms":{"mean":2.05,"sd":3.06},"detectorB_takeoff_err_ms":{"mean":8.45,"sd":5.82},"detectorB_landing_err_ms":{"mean":-0.29,"sd":3.79},"flight_err_ms":{"mean":-1.5,"sd":5.74},"warnings":{"detectors_disagree":0.18,"hip_vs_flight":0,"landing_knee":0.007},"hold_knee_deg":{"n":150,"bias":-0.09,"sd":0.25,"loaLow":-0.58,"loaHigh":0.39,"propSlope":-0.0025,"mae":0.21,"rmse":0.26,"r":0.9969},"false_countermovement_rate":0.013,"false_hold_angle_rate":0},"DJ":{"n":150,"analysable":1,"status":{"OK":0.787,"Warning":0.213,"Fail":0},"height_vs_flight_truth":{"n":150,"bias":-0.09,"sd":0.75,"loaLow":-1.56,"loaHigh":1.39,"propSlope":0.0224,"mae":0.59,"rmse":0.76,"r":0.9937},"height_vs_flight_truth_icc":0.9935,"height_icc_ci":[0.9914,0.9951],"height_vs_com_truth":{"n":150,"bias":-1.29,"sd":0.99,"loaLow":-3.24,"loaHigh":0.66,"propSlope":-0.0001,"mae":1.4,"rmse":1.63,"r":0.9889},"takeoff_err_ms":{"mean":3.57,"sd":4.63},"landing_err_ms":{"mean":2.67,"sd":3.85},"detectorB_takeoff_err_ms":{"mean":8.05,"sd":4.02},"detectorB_landing_err_ms":{"mean":-0.41,"sd":4.37},"flight_err_ms":{"mean":-0.9,"sd":6.35},"warnings":{"detectors_disagree":0.213,"hip_vs_flight":0,"landing_knee":0.013},"gct_ms":{"n":150,"bias":0.9,"sd":6.5,"loaLow":-11.8,"loaHigh":13.7,"propSlope":0.0164,"mae":5.1,"rmse":6.6,"r":0.9904},"rsi":{"n":150,"bias":-0.005,"sd":0.067,"loaLow":-0.136,"loaHigh":0.127,"propSlope":0.0401,"mae":0.049,"rmse":0.067,"r":0.9831},"rsi_icc":0.9823,"drop_height_cm":{"n":150,"bias":0,"sd":0.18,"loaLow":-0.35,"loaHigh":0.35,"propSlope":-0.0037,"mae":0.14,"rmse":0.18,"r":0.9994}}},"bias_correction":{"CMJ":{"with_correction":{"height_bias_cm":-0.002,"height_bias_pct":-0.13,"takeoff_ms":3.07,"landing_ms":2.86},"without_correction":{"height_bias_cm":-2.325,"height_bias_pct":-6.87,"takeoff_ms":12.8,"landing_ms":-5.43}},"SJ":{"with_correction":{"height_bias_cm":-0.179,"height_bias_pct":-0.6,"takeoff_ms":3.55,"landing_ms":2.05},"without_correction":{"height_bias_cm":-2.386,"height_bias_pct":-8.18,"takeoff_ms":13.73,"landing_ms":-6.51}},"DJ":{"with_correction":{"height_bias_cm":-0.088,"height_bias_pct":-0.41,"takeoff_ms":3.57,"landing_ms":2.67},"without_correction":{"height_bias_cm":-2.336,"height_bias_pct":-8.48,"takeoff_ms":13.97,"landing_ms":-6.46}}},"ba_points":{"CMJ":[{"mean":47.83,"diff":0.429},{"mean":27.63,"diff":0.131},{"mean":36.93,"diff":-0.554},{"mean":26.16,"diff":-0.198},{"mean":29.29,"diff":0.302},{"mean":43.37,"diff":0.551},{"mean":26.12,"diff":0.276},{"mean":27.63,"diff":-0.67},{"mean":44.32,"diff":0.979},{"mean":40.96,"diff":-0.047},{"mean":47.01,"diff":0.229},{"mean":42.44,"diff":0.308},{"mean":38.93,"diff":1.696},{"mean":25.04,"diff":-0.47},{"mean":46.95,"diff":1.462},{"mean":51.35,"diff":0.055},{"mean":52.36,"diff":0.065},{"mean":24.77,"diff":-0.222},{"mean":48.73,"diff":0.713},{"mean":52.16,"diff":0.29},{"mean":50.52,"diff":-0.683},{"mean":49.01,"diff":0.001},{"mean":31.8,"diff":-0.179},{"mean":50.81,"diff":-0.253},{"mean":29.97,"diff":1.403},{"mean":39.19,"diff":0.205},{"mean":41.63,"diff":1.885},{"mean":46.55,"diff":-1.442},{"mean":24.79,"diff":-0.035},{"mean":30.78,"diff":-1.018},{"mean":27.2,"diff":-0.757},{"mean":46.59,"diff":-0.798},{"mean":40.47,"diff":1.352},{"mean":45.74,"diff":-0.154},{"mean":45.41,"diff":0.602},{"mean":52.3,"diff":-0.38},{"mean":47.02,"diff":-1.508},{"mean":33.52,"diff":0.56},{"mean":38.87,"diff":-0.602},{"mean":35.81,"diff":-0.307},{"mean":41.47,"diff":-1.195},{"mean":31.26,"diff":-0.867},{"mean":33.67,"diff":-0.089},{"mean":39.35,"diff":-0.615},{"mean":24.13,"diff":-0.998},{"mean":26.25,"diff":0.184},{"mean":28.01,"diff":0.005},{"mean":46.66,"diff":0.412},{"mean":39.48,"diff":-0.766},{"mean":49.25,"diff":-0.596},{"mean":45.76,"diff":2.195},{"mean":35.5,"diff":-1.03},{"mean":41.84,"diff":-1.211},{"mean":40.08,"diff":0.283},{"mean":39.98,"diff":0.093},{"mean":23.65,"diff":-0.488},{"mean":32.11,"diff":0.456},{"mean":47.65,"diff":-0.577},{"mean":45.63,"diff":-0.958},{"mean":29.57,"diff":-1.368},{"mean":49.21,"diff":-0.4},{"mean":48.42,"diff":0.174},{"mean":36.55,"diff":0.748},{"mean":38.8,"diff":0.099},{"mean":25.04,"diff":0.602},{"mean":31.53,"diff":-0.329},{"mean":26.38,"diff":0.358},{"mean":33.74,"diff":0.511},{"mean":19.41,"diff":-0.296},{"mean":39.98,"diff":0.575},{"mean":27.42,"diff":-0.99},{"mean":35.4,"diff":-0.976},{"mean":24.56,"diff":0.107},{"mean":28.23,"diff":-0.134},{"mean":25.78,"diff":-0.705},{"mean":20.9,"diff":0.207},{"mean":26.55,"diff":-1.368},{"mean":41.83,"diff":0.654},{"mean":35.19,"diff":-1.246},{"mean":47.83,"diff":0.026},{"mean":41.74,"diff":1.602},{"mean":41.15,"diff":0.432},{"mean":24.88,"diff":-0.622},{"mean":33.76,"diff":0.846},{"mean":52.18,"diff":1.013},{"mean":38.57,"diff":0.726},{"mean":32.87,"diff":0.457},{"mean":48.58,"diff":0.96},{"mean":34.29,"diff":-0.331},{"mean":28.72,"diff":-0.373},{"mean":21.45,"diff":-0.818},{"mean":32.54,"diff":1.131},{"mean":37,"diff":-0.713},{"mean":47.27,"diff":1.061},{"mean":41.6,"diff":1.477},{"mean":51.15,"diff":-0.091},{"mean":35.92,"diff":0.527},{"mean":33.39,"diff":-0.581},{"mean":27.69,"diff":-1.195},{"mean":34.87,"diff":0.078},{"mean":45.96,"diff":-0.459},{"mean":44.31,"diff":-0.25},{"mean":48.08,"diff":-0.619},{"mean":24.92,"diff":-0.529},{"mean":20.6,"diff":0.142},{"mean":32.44,"diff":-1.203},{"mean":45.88,"diff":-0.2},{"mean":46.49,"diff":2.108},{"mean":29.17,"diff":0.27},{"mean":33.67,"diff":0.027},{"mean":47.17,"diff":0.591},{"mean":50.62,"diff":-0.091},{"mean":50.65,"diff":-0.458},{"mean":52.59,"diff":3.972},{"mean":38.32,"diff":0.542},{"mean":42.52,"diff":0.142},{"mean":20.51,"diff":-0.122},{"mean":49.59,"diff":-0.874},{"mean":37,"diff":0.901},{"mean":33.71,"diff":-0.7},{"mean":46.87,"diff":-0.817},{"mean":31.04,"diff":0.179},{"mean":39.57,"diff":0.079},{"mean":20.99,"diff":-0.544},{"mean":38.55,"diff":-0.817},{"mean":22.55,"diff":-0.35},{"mean":25.95,"diff":-0.037},{"mean":23.37,"diff":0.027},{"mean":44.12,"diff":0.363},{"mean":27.43,"diff":-0.27},{"mean":33.19,"diff":0.687},{"mean":23.87,"diff":-0.506},{"mean":37.02,"diff":-0.236},{"mean":37.47,"diff":1.07},{"mean":18.35,"diff":-1.12},{"mean":41.87,"diff":-0.37},{"mean":19.48,"diff":0.56},{"mean":50.85,"diff":0.546},{"mean":21.56,"diff":-0.271},{"mean":36.82,"diff":0.383},{"mean":31.96,"diff":-1.163},{"mean":26.28,"diff":0.676},{"mean":44.55,"diff":-0.103},{"mean":29.27,"diff":-1.336},{"mean":20.27,"diff":-0.254},{"mean":21.49,"diff":1.21},{"mean":41.67,"diff":-0.433},{"mean":50.67,"diff":0.169},{"mean":43.88,"diff":-0.053},{"mean":22.29,"diff":-0.095}],"SJ":[{"mean":38.77,"diff":-0.687},{"mean":23.38,"diff":-0.352},{"mean":30.86,"diff":-0.405},{"mean":22.33,"diff":-0.473},{"mean":25.75,"diff":1.561},{"mean":35.49,"diff":-0.344},{"mean":23.34,"diff":2.002},{"mean":23.96,"diff":-0.204},{"mean":36.57,"diff":0.812},{"mean":33.49,"diff":-1.105},{"mean":38.32,"diff":-0.525},{"mean":34.86,"diff":-0.302},{"mean":31.42,"diff":-0.73},{"mean":21.88,"diff":0.151},{"mean":37.46,"diff":-0.906},{"mean":41.96,"diff":0.102},{"mean":42.39,"diff":-0.439},{"mean":21.6,"diff":0.23},{"mean":40.42,"diff":1.478},{"mean":42.09,"diff":-0.605},{"mean":41.44,"diff":-0.191},{"mean":39.81,"diff":-0.63},{"mean":26.38,"diff":-1.158},{"mean":41.41,"diff":-0.342},{"mean":24.79,"diff":-0.469},{"mean":32.49,"diff":-0.17},{"mean":34.43,"diff":1.153},{"mean":38.35,"diff":-0.759},{"mean":21.43,"diff":-0.138},{"mean":27.27,"diff":1.654},{"mean":23.64,"diff":0.09},{"mean":38.66,"diff":0.09},{"mean":32.67,"diff":-0.989},{"mean":37.25,"diff":-0.765},{"mean":37.36,"diff":0.397},{"mean":42.81,"diff":0.017},{"mean":38.48,"diff":-1.243},{"mean":27.9,"diff":-0.409},{"mean":32.48,"diff":-0.335},{"mean":30.16,"diff":-0.063},{"mean":35.62,"diff":1.371},{"mean":26.64,"diff":-0.263},{"mean":28.59,"diff":0.542},{"mean":32.58,"diff":-0.765},{"mean":21.44,"diff":-0.058},{"mean":22.63,"diff":0.086},{"mean":23.8,"diff":-0.532},{"mean":38.3,"diff":0.073},{"mean":32.65,"diff":-1.088},{"mean":40.81,"diff":0.266},{"mean":36.85,"diff":-0.175},{"mean":29.9,"diff":-0.423},{"mean":34.05,"diff":-1.988},{"mean":32.8,"diff":-0.715},{"mean":33.35,"diff":0.372},{"mean":20.74,"diff":-0.204},{"mean":26.76,"diff":-0.55},{"mean":39.53,"diff":0.527},{"mean":37.76,"diff":-0.394},{"mean":25.09,"diff":-1.089},{"mean":40.62,"diff":0.112},{"mean":38.95,"diff":-1.301},{"mean":30.2,"diff":-0.251},{"mean":32.18,"diff":-0.236},{"mean":21.19,"diff":-0.673},{"mean":26.42,"diff":-0.836},{"mean":22.58,"diff":-0.074},{"mean":28.47,"diff":0.711},{"mean":16.81,"diff":-1.233},{"mean":33.37,"diff":0.537},{"mean":23.43,"diff":-0.816},{"mean":29.99,"diff":-0.109},{"mean":21.49,"diff":0.321},{"mean":24.37,"diff":0.334},{"mean":22.27,"diff":-0.506},{"mean":18.96,"diff":1.087},{"mean":22.82,"diff":-0.959},{"mean":34.3,"diff":-0.226},{"mean":29.12,"diff":-1.62},{"mean":39.11,"diff":-0.173},{"mean":33.6,"diff":-0.577},{"mean":33.86,"diff":-0.341},{"mean":22.24,"diff":0.675},{"mean":28.71,"diff":1.014},{"mean":41.74,"diff":-0.777},{"mean":31.59,"diff":-0.682},{"mean":27.62,"diff":0.244},{"mean":39.74,"diff":0.444},{"mean":28.91,"diff":-0.272},{"mean":24.59,"diff":-0.017},{"mean":19.47,"diff":0.352},{"mean":27.42,"diff":0.953},{"mean":30.58,"diff":-1.008},{"mean":39.48,"diff":1.967},{"mean":34,"diff":0.168},{"mean":41.38,"diff":-0.89},{"mean":30.17,"diff":0.664},{"mean":28.26,"diff":-0.315},{"mean":23.93,"diff":-0.45},{"mean":28.99,"diff":-0.341},{"mean":37.83,"diff":-0.155},{"mean":36.35,"diff":-0.376},{"mean":39.89,"diff":0.449},{"mean":21.28,"diff":-1.156},{"mean":18.81,"diff":1.034},{"mean":27.32,"diff":-0.906},{"mean":37.73,"diff":-0.336},{"mean":37.09,"diff":-0.557},{"mean":24.83,"diff":0.01},{"mean":27.94,"diff":-1.037},{"mean":38.68,"diff":0.151},{"mean":41.44,"diff":0.093},{"mean":41.15,"diff":-0.733},{"mean":41.46,"diff":0.007},{"mean":31.81,"diff":-0.058},{"mean":35.11,"diff":-0.184},{"mean":18.25,"diff":-0.04},{"mean":41.32,"diff":0.755},{"mean":30.78,"diff":0.217},{"mean":28.85,"diff":0.421},{"mean":38.75,"diff":-0.145},{"mean":26.06,"diff":-0.3},{"mean":32.68,"diff":-0.463},{"mean":18.38,"diff":-0.906},{"mean":32.48,"diff":0.217},{"mean":19.31,"diff":-1.243},{"mean":22.26,"diff":-0.227},{"mean":20.26,"diff":-0.284},{"mean":36.16,"diff":-0.355},{"mean":23.46,"diff":-0.498},{"mean":27.39,"diff":-0.477},{"mean":20.58,"diff":-0.805},{"mean":30.87,"diff":-0.46},{"mean":31.07,"diff":0.518},{"mean":16.46,"diff":-0.952},{"mean":34.64,"diff":-0.403},{"mean":17.22,"diff":-0.008},{"mean":41.09,"diff":-0.58},{"mean":19.25,"diff":0.312},{"mean":30.92,"diff":0.411},{"mean":26.92,"diff":-1.066},{"mean":22.49,"diff":0.19},{"mean":37.08,"diff":0.389},{"mean":25.39,"diff":-0.177},{"mean":17.95,"diff":-0.485},{"mean":18.53,"diff":0.149},{"mean":34.51,"diff":-0.155},{"mean":40.91,"diff":-1.083},{"mean":36.11,"diff":-0.218},{"mean":19.56,"diff":-0.175}],"DJ":[{"mean":36.34,"diff":-0.656},{"mean":22.7,"diff":-0.16},{"mean":29.25,"diff":-0.488},{"mean":22,"diff":0.165},{"mean":24.14,"diff":-0.015},{"mean":34.47,"diff":1.721},{"mean":21.15,"diff":-1.112},{"mean":23.3,"diff":-0.079},{"mean":34.14,"diff":0.218},{"mean":32.21,"diff":0.071},{"mean":36.3,"diff":0.181},{"mean":32.81,"diff":-0.433},{"mean":30.33,"diff":0.333},{"mean":20.63,"diff":-1.214},{"mean":35.11,"diff":-0.853},{"mean":38.75,"diff":-0.736},{"mean":39.65,"diff":-0.099},{"mean":20.42,"diff":-1.054},{"mean":37.2,"diff":0.076},{"mean":39.65,"diff":0.249},{"mean":38.17,"diff":-1.203},{"mean":37.19,"diff":-0.702},{"mean":25.77,"diff":-0.164},{"mean":38.74,"diff":-0.156},{"mean":24.19,"diff":0.047},{"mean":30.63,"diff":-0.49},{"mean":32.03,"diff":-0.018},{"mean":36.19,"diff":-0.148},{"mean":20.71,"diff":-0.551},{"mean":25,"diff":-0.722},{"mean":22.68,"diff":-0.309},{"mean":36.86,"diff":1.301},{"mean":31.24,"diff":-0.377},{"mean":34.87,"diff":-0.864},{"mean":34.42,"diff":-0.995},{"mean":39.65,"diff":-0.515},{"mean":36.08,"diff":-0.999},{"mean":27.39,"diff":0.935},{"mean":30.61,"diff":-0.647},{"mean":29.5,"diff":1.463},{"mean":33.14,"diff":0.28},{"mean":25.65,"diff":-0.019},{"mean":26.84,"diff":-0.373},{"mean":30.68,"diff":-1.026},{"mean":20.77,"diff":-0.503},{"mean":21.69,"diff":-0.601},{"mean":23.45,"diff":0.25},{"mean":35.78,"diff":-0.31},{"mean":31.58,"diff":0.312},{"mean":38.58,"diff":0.962},{"mean":35.23,"diff":0.878},{"mean":27.63,"diff":-1.988},{"mean":32.94,"diff":-0.132},{"mean":31.4,"diff":0.086},{"mean":31.99,"diff":1.239},{"mean":20.21,"diff":-0.453},{"mean":26.17,"diff":0.416},{"mean":36.88,"diff":0.258},{"mean":35.43,"diff":-0.422},{"mean":24.32,"diff":-0.62},{"mean":38.16,"diff":0.319},{"mean":36.84,"diff":-0.441},{"mean":28.85,"diff":-0.027},{"mean":30.1,"diff":-1.034},{"mean":20.72,"diff":-0.69},{"mean":25.65,"diff":-0.215},{"mean":21.96,"diff":-0.103},{"mean":26.28,"diff":-1.108},{"mean":17.21,"diff":-0.304},{"mean":32.55,"diff":2.349},{"mean":22.91,"diff":-0.258},{"mean":28.24,"diff":-0.709},{"mean":20.71,"diff":-0.327},{"mean":22.8,"diff":-1.195},{"mean":21.53,"diff":-0.752},{"mean":18.38,"diff":0.242},{"mean":21.54,"diff":-2.016},{"mean":32.51,"diff":0.029},{"mean":28.95,"diff":0.989},{"mean":36.91,"diff":0.412},{"mean":32.13,"diff":0.296},{"mean":32.26,"diff":0.152},{"mean":21.05,"diff":-0.702},{"mean":27.25,"diff":0.468},{"mean":39.23,"diff":-0.129},{"mean":30.22,"diff":-0.221},{"mean":26.55,"diff":0.505},{"mean":36.82,"diff":-0.428},{"mean":28.24,"diff":0.961},{"mean":23.64,"diff":-0.145},{"mean":19.49,"diff":0.842},{"mean":25.64,"diff":-0.3},{"mean":29.42,"diff":-0.103},{"mean":36.87,"diff":1.454},{"mean":32.06,"diff":-0.006},{"mean":38.64,"diff":-0.82},{"mean":28.1,"diff":-0.601},{"mean":27.2,"diff":0.023},{"mean":23.63,"diff":0.584},{"mean":27.54,"diff":-0.45},{"mean":35.23,"diff":-0.616},{"mean":33.95,"diff":-0.717},{"mean":37.29,"diff":0.323},{"mean":21.89,"diff":1.102},{"mean":18.32,"diff":0.275},{"mean":26.28,"diff":-0.506},{"mean":35.69,"diff":0.158},{"mean":35.42,"diff":0.688},{"mean":24.11,"diff":0.255},{"mean":27.16,"diff":-0.187},{"mean":37.16,"diff":1.824},{"mean":38.23,"diff":-0.854},{"mean":38.72,"diff":-0.048},{"mean":38.64,"diff":-0.25},{"mean":30.48,"diff":0.446},{"mean":33.84,"diff":1.22},{"mean":18,"diff":-0.274},{"mean":38.01,"diff":-0.517},{"mean":29.53,"diff":0.63},{"mean":27.19,"diff":-0.311},{"mean":36.35,"diff":-0.093},{"mean":25.52,"diff":0.729},{"mean":31.06,"diff":-0.214},{"mean":19.01,"diff":0.703},{"mean":30.39,"diff":-0.491},{"mean":19.8,"diff":0.348},{"mean":21.29,"diff":-0.935},{"mean":20.19,"diff":0.325},{"mean":34.61,"diff":0.77},{"mean":22.95,"diff":-0.114},{"mean":25.94,"diff":-0.925},{"mean":20.12,"diff":-0.81},{"mean":29.6,"diff":0.032},{"mean":29.02,"diff":-0.461},{"mean":16.26,"diff":-1.318},{"mean":32.43,"diff":-0.911},{"mean":17.2,"diff":-0.041},{"mean":39.85,"diff":2.34},{"mean":18.4,"diff":-0.872},{"mean":29.76,"diff":1.031},{"mean":26.8,"diff":1.045},{"mean":21.56,"diff":-0.465},{"mean":34.36,"diff":-0.748},{"mean":24.52,"diff":-0.046},{"mean":17.88,"diff":-0.451},{"mean":18.62,"diff":0.679},{"mean":31.81,"diff":-1.551},{"mean":39.37,"diff":1.204},{"mean":34.2,"diff":0.259},{"mean":19.08,"diff":-0.586}]},"fps_sensitivity":{"CMJ":[{"fps":240,"n":75,"analysable":1,"height_bias_cm":-0.05,"height_sd_cm":0.64,"height_loa":[-1.3,1.2],"height_mae_cm":0.48},{"fps":120,"n":75,"analysable":1,"height_bias_cm":-0.33,"height_sd_cm":0.77,"height_loa":[-1.83,1.18],"height_mae_cm":0.68},{"fps":60,"n":75,"analysable":1,"height_bias_cm":-0.11,"height_sd_cm":1.22,"height_loa":[-2.5,2.29],"height_mae_cm":0.99},{"fps":30,"n":75,"analysable":1,"height_bias_cm":1.79,"height_sd_cm":1.69,"height_loa":[-1.52,5.11],"height_mae_cm":1.96}],"SJ":[{"fps":240,"n":75,"analysable":1,"height_bias_cm":-0.31,"height_sd_cm":0.73,"height_loa":[-1.74,1.13],"height_mae_cm":0.62},{"fps":120,"n":75,"analysable":1,"height_bias_cm":-0.2,"height_sd_cm":1.03,"height_loa":[-2.23,1.82],"height_mae_cm":0.76},{"fps":60,"n":75,"analysable":1,"height_bias_cm":-0.31,"height_sd_cm":1.03,"height_loa":[-2.33,1.72],"height_mae_cm":0.83},{"fps":30,"n":75,"analysable":1,"height_bias_cm":1.36,"height_sd_cm":1.54,"height_loa":[-1.67,4.38],"height_mae_cm":1.56}],"DJ":[{"fps":240,"n":75,"analysable":1,"height_bias_cm":0.03,"height_sd_cm":0.78,"height_loa":[-1.49,1.55],"height_mae_cm":0.6,"gct_bias_ms":0.4,"gct_sd_ms":6.5,"rsi_bias":0.005,"rsi_sd":0.078,"rsi_mae_pct":4.2},{"fps":120,"n":75,"analysable":1,"height_bias_cm":-0.33,"height_sd_cm":0.68,"height_loa":[-1.66,1],"height_mae_cm":0.61,"gct_bias_ms":1.6,"gct_sd_ms":6.7,"rsi_bias":-0.018,"rsi_sd":0.066,"rsi_mae_pct":4.2},{"fps":60,"n":75,"analysable":1,"height_bias_cm":-0.1,"height_sd_cm":0.89,"height_loa":[-1.85,1.66],"height_mae_cm":0.71,"gct_bias_ms":1.3,"gct_sd_ms":8.6,"rsi_bias":-0.002,"rsi_sd":0.091,"rsi_mae_pct":5},{"fps":30,"n":75,"analysable":1,"height_bias_cm":1.41,"height_sd_cm":1.79,"height_loa":[-2.11,4.92],"height_mae_cm":1.62,"gct_hidden":true}]},"noise_sensitivity":{"CMJ":[{"noise":"none","keypoint_sd_cm":0,"status":{"OK":1,"Warning":0,"Fail":0},"height_bias_cm":-0.14,"height_loa":[-0.64,0.35],"height_mae_cm":0.24},{"noise":"official","keypoint_sd_cm":0.58,"status":{"OK":0.733,"Warning":0.267,"Fail":0},"height_bias_cm":0.02,"height_loa":[-1.56,1.6],"height_mae_cm":0.63},{"noise":"poor","keypoint_sd_cm":1.34,"status":{"OK":0.52,"Warning":0.48,"Fail":0},"height_bias_cm":-0.14,"height_loa":[-2.43,2.15],"height_mae_cm":0.92}],"SJ":[{"noise":"none","keypoint_sd_cm":0,"status":{"OK":1,"Warning":0,"Fail":0},"height_bias_cm":-0.2,"height_loa":[-0.64,0.24],"height_mae_cm":0.25},{"noise":"official","keypoint_sd_cm":0.58,"status":{"OK":0.787,"Warning":0.213,"Fail":0},"height_bias_cm":-0.13,"height_loa":[-1.41,1.15],"height_mae_cm":0.52},{"noise":"poor","keypoint_sd_cm":1.34,"status":{"OK":0.027,"Warning":0.04,"Fail":0.933},"height_bias_cm":-0.51,"height_loa":[-2.3,1.29],"height_mae_cm":0.89}],"DJ":[{"noise":"none","keypoint_sd_cm":0,"status":{"OK":1,"Warning":0,"Fail":0},"height_bias_cm":-0.22,"height_loa":[-0.62,0.19],"height_mae_cm":0.26},{"noise":"official","keypoint_sd_cm":0.58,"status":{"OK":0.8,"Warning":0.2,"Fail":0},"height_bias_cm":-0.17,"height_loa":[-1.74,1.39],"height_mae_cm":0.68},{"noise":"poor","keypoint_sd_cm":1.34,"status":{"OK":0.387,"Warning":0.613,"Fail":0},"height_bias_cm":-0.47,"height_loa":[-2.54,1.59],"height_mae_cm":0.9}]},"reliability":{"CMJ":{"metric":"Jump height (cm)","instrument_official_240":{"n":30,"icc_a1":0.9965,"icc_ci":[0.9937,0.9981],"sem":0.553,"mdc95":1.534},"instrument_live_60":{"n":30,"icc_a1":0.98,"icc_ci":[0.9636,0.9893],"sem":1.386,"mdc95":3.84},"instrument_live_30":{"n":30,"icc_a1":0.9386,"icc_ci":[0.8787,0.971],"sem":2.677,"mdc95":7.421},"test_retest":{"n":30,"assumptions":"受試者間變異來自模擬母體；跨日 CV 4%、試跳間 CV 3%（假設值，需以實測取代）","system":{"icc_a1":0.9787,"icc_ci":[0.9581,0.9891],"sem":1.715,"mdc95":4.754},"true_values":{"icc_a1":0.9795,"sem":1.656,"mdc95":4.591},"sem_added_by_system":0.445,"intra_session_3_trials":{"n":30,"icc_c1":0.9896,"sem":1.201}}},"SJ":{"metric":"Jump height (cm)","instrument_official_240":{"n":30,"icc_a1":0.9903,"icc_ci":[0.9809,0.9947],"sem":0.726,"mdc95":2.012},"instrument_live_60":{"n":30,"icc_a1":0.9483,"icc_ci":[0.8942,0.9774],"sem":1.773,"mdc95":4.915},"instrument_live_30":{"n":30,"icc_a1":0.952,"icc_ci":[0.9235,0.9722],"sem":1.899,"mdc95":5.264},"test_retest":{"n":30,"assumptions":"受試者間變異來自模擬母體；跨日 CV 4%、試跳間 CV 3%（假設值，需以實測取代）","system":{"icc_a1":0.953,"icc_ci":[0.9167,0.9775],"sem":1.808,"mdc95":5.013},"true_values":{"icc_a1":0.9605,"sem":1.656,"mdc95":4.589},"sem_added_by_system":0.728,"intra_session_3_trials":{"n":30,"icc_c1":0.9792,"sem":1.232}}},"DJ":{"metric":"RSI (m/s)","instrument_official_240":{"n":30,"icc_a1":0.9639,"icc_ci":[0.9271,0.9847],"sem":0.06,"mdc95":0.166},"instrument_live_60":{"n":30,"icc_a1":0.9043,"icc_ci":[0.8275,0.967],"sem":0.104,"mdc95":0.288},"instrument_live_30":{"n":0,"note":"可分析筆數不足"},"test_retest":{"n":30,"assumptions":"受試者間變異來自模擬母體；跨日 CV 4%、試跳間 CV 3%（假設值，需以實測取代）","system":{"icc_a1":0.9753,"icc_ci":[0.9498,0.9869],"sem":0.072,"mdc95":0.199},"true_values":{"icc_a1":0.9797,"sem":0.067,"mdc95":0.185},"sem_added_by_system":0.026,"intra_session_3_trials":{"n":30,"icc_c1":0.9715,"sem":0.081}}}},"rules":{"sj_countermovement":[{"dip_cm":0,"truly_invalid":false,"flagged_rate":0},{"dip_cm":0.5,"truly_invalid":false,"flagged_rate":0},{"dip_cm":1,"truly_invalid":false,"flagged_rate":0.05},{"dip_cm":1.5,"truly_invalid":false,"flagged_rate":0.3},{"dip_cm":2.5,"truly_invalid":true,"flagged_rate":1},{"dip_cm":3,"truly_invalid":true,"flagged_rate":1},{"dip_cm":4,"truly_invalid":true,"flagged_rate":1}],"sj_hold_angle":[{"true_knee_deg":70,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":69.9,"measured_sd":0.24},{"true_knee_deg":75,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":74.9,"measured_sd":0.23},{"true_knee_deg":78,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":77.9,"measured_sd":0.22},{"true_knee_deg":82,"truly_out_of_range":false,"flagged_rate":0,"measured_mean":81.9,"measured_sd":0.21},{"true_knee_deg":90,"truly_out_of_range":false,"flagged_rate":0,"measured_mean":89.9,"measured_sd":0.2},{"true_knee_deg":98,"truly_out_of_range":false,"flagged_rate":0,"measured_mean":97.9,"measured_sd":0.19},{"true_knee_deg":102,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":101.9,"measured_sd":0.19},{"true_knee_deg":105,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":104.9,"measured_sd":0.19},{"true_knee_deg":110,"truly_out_of_range":true,"flagged_rate":1,"measured_mean":109.9,"measured_sd":0.18}],"landing_tuck":[{"tuck_cm":0,"height_vs_com_bias_cm":-1.28,"height_vs_com_bias_pct":-3.7,"landing_knee_warning_rate":0,"hip_vs_flight_warning_rate":0},{"tuck_cm":2,"height_vs_com_bias_cm":-0.28,"height_vs_com_bias_pct":-0.8,"landing_knee_warning_rate":0.9,"hip_vs_flight_warning_rate":0},{"tuck_cm":5,"height_vs_com_bias_cm":1.23,"height_vs_com_bias_pct":3.6,"landing_knee_warning_rate":1,"hip_vs_flight_warning_rate":0},{"tuck_cm":8,"height_vs_com_bias_cm":2.63,"height_vs_com_bias_pct":7.6,"landing_knee_warning_rate":1,"hip_vs_flight_warning_rate":0.05},{"tuck_cm":12,"height_vs_com_bias_cm":4.52,"height_vs_com_bias_pct":13,"landing_knee_warning_rate":1,"hip_vs_flight_warning_rate":0.35}],"scale_error":[{"scale_err_pct":-5,"height_bias_cm":0.06,"depth_bias_pct":-4.4},{"scale_err_pct":-3,"height_bias_cm":0.07,"depth_bias_pct":-2.3},{"scale_err_pct":0,"height_bias_cm":0.07,"depth_bias_pct":0.7},{"scale_err_pct":3,"height_bias_cm":0.1,"depth_bias_pct":3.7},{"scale_err_pct":5,"height_bias_cm":0.11,"depth_bias_pct":5.7}]},"real_clips":[{"name":"jump813","fps":30,"status":"Fail","error":"Error: 找不到滯空（最高點時足部仍在地面）"},{"name":"jump3011","fps":30,"status":"Fail","error":"Error: 找不到滯空（最高點時足部仍在地面）"}],"runtime_s":73.1};
+const T = ['CMJ', 'SJ', 'DJ'];
+const $ = (id) => document.getElementById(id);
+const f = (x, d = 2) => (x === undefined || x === null || !Number.isFinite(+x) ? '—' : (+x).toFixed(d));
+const pct = (x) => `${Math.round(x * 100)}%`;
+const loa = (b, d = 2) => `${f(b.bias, d)} [${f(b.loaLow, d)}, ${f(b.loaHigh, d)}]`;
+const tbl = (id, head, rows) => { $(id).innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td${typeof c === 'object' && c?.n ? ' class="n"' : ''}>${typeof c === 'object' && c ? c.v : c}</td>`).join('')}</tr>`).join('')}</tbody>`; };
+const N = (v) => ({ n: true, v });
+const v = D.validity, R = D.reliability;
+
+// ---------- meta / verdict / kpis
+$('meta').innerHTML = [`產生 ${new Date(D.generated).toLocaleDateString('zh-TW')}`, `每條件 n = ${D.n_per_condition}`, `信度 n = 30`, `執行 ${D.runtime_s} s`, `公式檢查 0.5 s → ${D.formula.flight_0_5s_cm} cm ${D.formula.pass ? '✓' : '✗'}`].map((s) => `<span>${s}</span>`).join('');
+const minIcc = Math.min(...T.map((t) => v[t].height_vs_flight_truth_icc));
+const bc = D.bias_correction;
+const f30 = D.fps_sensitivity.CMJ[3];
+$('verdict').innerHTML = [
+  `<b>240 fps 下跳躍高度效度很高：</b>三項測驗 ICC(A,1) ≥ ${f(minIcc, 3)}，偏差在 ±0.2 cm 內，95% 一致性界限約 ±1.5 cm。`,
+  `<b>SPEC 8.2 的偏差修正是必要的：</b>不修正會低估高度 ${f(-bc.CMJ.without_correction.height_bias_pct, 1)}–${f(-bc.DJ.without_correction.height_bias_pct, 1)}%，修正後 &lt; 1%。`,
+  `<b>DJ：</b>GCT 偏差 ${f(v.DJ.gct_ms.bias, 1)} ms（LoA ${f(v.DJ.gct_ms.loaLow, 1)} 到 ${f(v.DJ.gct_ms.loaHigh, 1)} ms），RSI 的 ICC ${f(v.DJ.rsi_icc, 3)}。`,
+  `<b>30 fps 不能當正式成果：</b>高度系統性高估 ${f(f30.height_bias_cm, 1)} cm、LoA ${f(f30.height_loa[0], 1)} 到 ${f(f30.height_loa[1], 1)} cm，支持 Live 值只標示 Preview。`,
+  `<b>需要調整的門檻：</b>第二事件偵測器在正常試跳上約 ${pct(Math.min(...T.map((t) => v[t].warnings.detectors_disagree)))}–${pct(Math.max(...T.map((t) => v[t].warnings.detectors_disagree)))} 誤報 Warning；SJ 的 ±1 cm 保持帶寬在姿態品質差時幾乎全部判 Fail（見第 7 節）。`,
+].map((s) => `<li>${s}</li>`).join('');
+$('kpis').innerHTML = [
+  ...T.map((t) => [`${t} 高度 ICC(A,1)`, f(v[t].height_vs_flight_truth_icc, 3), `95% CI ${v[t].height_icc_ci.map((x) => f(x, 3)).join('–')}`]),
+  ['CMJ 儀器 MDC₉₅', `${f(R.CMJ.instrument_official_240.mdc95, 1)} cm`, `SEM ${f(R.CMJ.instrument_official_240.sem, 2)} cm · 240 fps`],
+].map(([a, b, c]) => `<div class="stat"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('');
+
+// ---------- validity table
+$('validity-n').textContent = `每項 n = ${v.CMJ.n}。數值為「系統 − 真值」的偏差 [95% 一致性界限]；事件時刻誤差為平均 ± SD。`;
+tbl('t-validity', ['指標', 'CMJ', 'SJ', 'DJ'], [
+  ['跳躍高度 (cm)', ...T.map((t) => N(`${loa(v[t].height_vs_flight_truth)}<span class="sub">MAE ${f(v[t].height_vs_flight_truth.mae)} · r ${f(v[t].height_vs_flight_truth.r, 4)}</span>`))],
+  ['起跳時刻 (ms)', ...T.map((t) => N(`${f(v[t].takeoff_err_ms.mean, 1)} ± ${f(v[t].takeoff_err_ms.sd, 1)}`))],
+  ['落地時刻 (ms)', ...T.map((t) => N(`${f(v[t].landing_err_ms.mean, 1)} ± ${f(v[t].landing_err_ms.sd, 1)}`))],
+  ['滯空時間 (ms)', ...T.map((t) => N(`${f(v[t].flight_err_ms.mean, 1)} ± ${f(v[t].flight_err_ms.sd, 1)}`))],
+  ['狀態', ...T.map((t) => `<span class="pill ok">OK ${pct(v[t].status.OK)}</span> <span class="pill warn">Warn ${pct(v[t].status.Warning)}</span> <span class="pill fail">Fail ${pct(v[t].status.Fail)}</span>`)],
+  ['Warning 主要來源', ...T.map((t) => `<span class="small">偵測器不一致 ${pct(v[t].warnings.detectors_disagree)}<br>落地膝屈曲 ${pct(v[t].warnings.landing_knee)}</span>`)],
+]);
+tbl('t-secondary', ['指標', '偏差 [95% LoA]', '其他'], [
+  ['CMJ 下蹲深度 (cm)', N(loa(v.CMJ.depth_cm)), N(`r ${f(v.CMJ.depth_cm.r, 4)}`)],
+  ['CMJ 起跳時間 (ms)', N(loa(v.CMJ.time_to_takeoff_ms, 1)), '動作開始依規格定義偵測，比真正開始晚'],
+  ['CMJ RSImod (m/s)', N(loa(v.CMJ.rsi_mod, 3)), N(`ICC ${f(v.CMJ.rsi_mod_icc, 3)}`)],
+  ['SJ 保持膝角 (°)', N(loa(v.SJ.hold_knee_deg)), `誤判反向動作 ${f(v.SJ.false_countermovement_rate * 100, 1)}%`],
+  ['DJ GCT (ms)', N(loa(v.DJ.gct_ms, 1)), N(`r ${f(v.DJ.gct_ms.r, 4)}`)],
+  ['DJ RSI (m/s)', N(loa(v.DJ.rsi, 3)), N(`ICC ${f(v.DJ.rsi_icc, 3)}`)],
+  ['DJ 落下高度 (cm)', N(loa(v.DJ.drop_height_cm)), N(`r ${f(v.DJ.drop_height_cm.r, 4)}`)],
+]);
+
+// ---------- SVG helpers
+const NS = 'http://www.w3.org/2000/svg';
+function svg(w, h) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('role', 'img'); return s; }
+function el(s, tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; s.appendChild(e); return e; }
+const lin = (d0, d1, r0, r1) => (x) => r0 + ((x - d0) / (d1 - d0)) * (r1 - r0);
+function ticks(lo, hi, n) { const step = (hi - lo) / n; return Array.from({ length: n + 1 }, (_, i) => lo + i * step); }
+
+function baPlot(test) {
+  const pts = D.ba_points[test], b = v[test].height_vs_flight_truth;
+  const W = 340, H = 230, m = { l: 34, r: 64, t: 10, b: 28 };
+  const xs = pts.map((p) => p.mean);
+  const x0 = Math.floor(Math.min(...xs) / 5) * 5, x1 = Math.ceil(Math.max(...xs) / 5) * 5;
+  const X = lin(x0, x1, m.l, W - m.r), Y = lin(-3, 3, H - m.b, m.t);
+  const s = svg(W, H);
+  for (const y of [-3, -2, -1, 0, 1, 2, 3]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)', 'stroke-width': 1 }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, y); }
+  const xt = ticks(x0, x1, 4);
+  for (const x of xt) el(s, 'text', { x: X(x), y: H - m.b + 16, 'text-anchor': 'middle' }, Math.round(x));
+  el(s, 'text', { x: (m.l + W - m.r) / 2, y: H - 1, 'text-anchor': 'middle' }, '平均高度 (cm)');
+  for (const p of pts) el(s, 'circle', { cx: X(p.mean), cy: Y(Math.max(-3, Math.min(3, p.diff))), r: 2.6, fill: 'var(--dot)' });
+  const line = (y, color, dash, label) => { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: color, 'stroke-width': 1.5, 'stroke-dasharray': dash }); el(s, 'text', { x: W - m.r + 4, y: Y(y) + 3.5, style: `fill:${color}` }, label); };
+  line(b.bias, 'var(--accent)', '', `偏差 ${f(b.bias)}`);
+  line(b.loaHigh, 'var(--signal)', '4 3', `+${f(b.loaHigh)}`);
+  line(b.loaLow, 'var(--signal)', '4 3', `${f(b.loaLow)}`);
+  return s;
+}
+$('ba').innerHTML = '';
+for (const t of T) {
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<div class="t">${t} Bland–Altman：跳躍高度</div>`;
+  fig.appendChild(baPlot(t));
+  const cap = document.createElement('figcaption'); cap.textContent = `系統 − 真值（cm）對平均；n = ${D.ba_points[t].length}`; fig.appendChild(cap);
+  $('ba').appendChild(fig);
+}
+
+// ---------- bias correction
+(() => {
+  const W = 400, H = 170, m = { l: 44, r: 16, t: 10, b: 26 };
+  const s = svg(W, H);
+  const X = lin(-10, 2, m.l, W - m.r);
+  for (const x of [-10, -8, -6, -4, -2, 0, 2]) { el(s, 'line', { x1: X(x), x2: X(x), y1: m.t, y2: H - m.b, stroke: x === 0 ? 'var(--muted)' : 'var(--rule)', 'stroke-width': 1 }); el(s, 'text', { x: X(x), y: H - m.b + 15, 'text-anchor': 'middle' }, `${x}%`); }
+  const band = (H - m.t - m.b) / 3;
+  T.forEach((t, i) => {
+    const y0 = m.t + i * band;
+    el(s, 'text', { x: m.l - 8, y: y0 + band / 2 + 4, 'text-anchor': 'end' }, t);
+    const on = bc[t].with_correction.height_bias_pct, off = bc[t].without_correction.height_bias_pct;
+    const bar = (val, y, color) => { const a = X(Math.min(0, val)), b = X(Math.max(0, val)); el(s, 'rect', { x: a, y, width: Math.max(1.5, b - a), height: band * 0.3, fill: color, rx: 2 }); el(s, 'text', { x: val < 0 ? a - 4 : b + 4, y: y + band * 0.24, 'text-anchor': val < 0 ? 'end' : 'start', style: `fill:${color}` }, `${f(val, 1)}%`); };
+    bar(off, y0 + band * 0.14, 'var(--signal)');
+    bar(on, y0 + band * 0.52, 'var(--accent)');
+  });
+  $('fig-bias').appendChild(s);
+  const lg = document.createElement('figcaption'); lg.innerHTML = '<span style="color:var(--signal)">■</span> 不修正　<span style="color:var(--accent)">■</span> 修正'; $('fig-bias').appendChild(lg);
+})();
+tbl('t-bias', ['', '高度偏差（修正）', '（不修正）', '起跳 / 落地時刻偏差（修正）', '（不修正）'], T.map((t) => {
+  const b = bc[t];
+  return [t, N(`${f(b.with_correction.height_bias_cm)} cm`), N(`${f(b.without_correction.height_bias_cm)} cm`), N(`${f(b.with_correction.takeoff_ms, 1)} / ${f(b.with_correction.landing_ms, 1)} ms`), N(`${f(b.without_correction.takeoff_ms, 1)} / ${f(b.without_correction.landing_ms, 1)} ms`)];
+}));
+
+// ---------- fps
+(() => {
+  const W = 400, H = 220, m = { l: 36, r: 16, t: 12, b: 28 };
+  const s = svg(W, H), cats = [240, 120, 60, 30];
+  const X = (i) => m.l + 16 + (i * (W - m.l - m.r - 32)) / 3, Y = lin(0, 2.5, H - m.b, m.t);
+  for (const y of [0, 0.5, 1, 1.5, 2, 2.5]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)' }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, y); }
+  cats.forEach((c, i) => el(s, 'text', { x: X(i), y: H - m.b + 16, 'text-anchor': 'middle' }, `${c} fps`));
+  const col = { CMJ: 'var(--accent)', SJ: 'var(--ok)', DJ: 'var(--signal)' };
+  for (const t of T) {
+    const ys = D.fps_sensitivity[t].map((r) => r.height_mae_cm);
+    el(s, 'polyline', { points: ys.map((y, i) => `${X(i)},${Y(y)}`).join(' '), fill: 'none', stroke: col[t], 'stroke-width': 2 });
+    ys.forEach((y, i) => el(s, 'circle', { cx: X(i), cy: Y(y), r: 3.2, fill: col[t] }));
+    el(s, 'text', { x: X(3) + 6, y: Y(ys[3]) + (t === 'SJ' ? 10 : t === 'DJ' ? 0 : -4), style: `fill:${col[t]}` }, t);
+  }
+  $('fig-fps').appendChild(s);
+  $('fps-legend').textContent = '同一批動作降取樣；每點 n = 75。';
+})();
+tbl('t-fps', ['fps', 'CMJ 高度偏差 [LoA] cm', 'DJ GCT 偏差 ± SD (ms)', 'DJ RSI 平均絕對誤差'], D.fps_sensitivity.CMJ.map((r, i) => {
+  const j = D.fps_sensitivity.DJ[i];
+  return [N(r.fps), N(`${f(r.height_bias_cm)} [${f(r.height_loa[0])}, ${f(r.height_loa[1])}]`), j.gct_hidden ? '不顯示（&lt; 60 fps）' : N(`${f(j.gct_bias_ms, 1)} ± ${f(j.gct_sd_ms, 1)}`), j.gct_hidden ? '—' : N(`${f(j.rsi_mae_pct, 1)}%`)];
+}));
+
+// ---------- reliability
+const cell = (x) => (x && x.icc_a1 !== undefined ? N(`${f(x.icc_a1, 3)}<span class="sub">[${x.icc_ci.map((c) => f(c, 3)).join('–')}] · SEM ${f(x.sem, 3)} · MDC₉₅ ${f(x.mdc95, 2)}</span>`) : '<span class="muted small">GCT / RSI 不顯示</span>');
+tbl('t-inst', ['', '指標', '240 fps 正式', '60 fps Live', '30 fps Live'], T.map((t) => [t, R[t].metric, cell(R[t].instrument_official_240), cell(R[t].instrument_live_60), cell(R[t].instrument_live_30)]));
+$('tr-assume').textContent = `30 名模擬受試者、2 天、每天 3 跳取平均。${R.CMJ.test_retest.assumptions}。表中「系統額外增加的 SEM」= √(SEM²系統 − SEM²真值)。`;
+tbl('t-tr', ['', '系統 ICC(A,1) [95% CI]', '系統 SEM / MDC₉₅', '真值 SEM / MDC₉₅', '系統額外增加的 SEM', '單次內 3 跳 ICC(C,1)'], T.map((t) => {
+  const x = R[t].test_retest;
+  return [t, N(`${f(x.system.icc_a1, 3)} [${x.system.icc_ci.map((c) => f(c, 3)).join('–')}]`), N(`${f(x.system.sem, 3)} / ${f(x.system.mdc95, 2)}`), N(`${f(x.true_values.sem, 3)} / ${f(x.true_values.mdc95, 2)}`), N(f(x.sem_added_by_system, 3)), N(f(x.intra_session_3_trials.icc_c1, 3))];
+}));
+
+// ---------- rules
+(() => {
+  const rows = D.rules.sj_countermovement;
+  const W = 400, H = 200, m = { l: 40, r: 16, t: 12, b: 30 };
+  const s = svg(W, H), X = lin(0, 4, m.l, W - m.r), Y = lin(0, 1, H - m.b, m.t);
+  for (const y of [0, 0.25, 0.5, 0.75, 1]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)' }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, `${y * 100}%`); }
+  for (const x of [0, 1, 2, 3, 4]) el(s, 'text', { x: X(x), y: H - m.b + 16, 'text-anchor': 'middle' }, `${x} cm`);
+  el(s, 'line', { x1: X(2), x2: X(2), y1: m.t, y2: H - m.b, stroke: 'var(--signal)', 'stroke-dasharray': '4 3', 'stroke-width': 1.5 });
+  el(s, 'text', { x: X(2) + 4, y: m.t + 10, style: 'fill:var(--signal)' }, '門檻 2 cm');
+  el(s, 'polyline', { points: rows.map((r) => `${X(r.dip_cm)},${Y(r.flagged_rate)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2 });
+  rows.forEach((r) => { el(s, 'circle', { cx: X(r.dip_cm), cy: Y(r.flagged_rate), r: 3.5, fill: 'var(--accent)' }); el(s, 'text', { x: X(r.dip_cm), y: Y(r.flagged_rate) - 7, 'text-anchor': 'middle' }, pct(r.flagged_rate)); });
+  $('fig-cm').appendChild(s);
+})();
+tbl('t-hold', ['SJ 真實保持膝角', '量測（平均 ± SD）', '判 Fail'], D.rules.sj_hold_angle.map((r) => [N(`${r.true_knee_deg}°${r.truly_out_of_range ? ' <span class="pill fail">超出 80–100°</span>' : ''}`), N(`${f(r.measured_mean, 1)} ± ${f(r.measured_sd, 2)}`), N(pct(r.flagged_rate))]));
+tbl('t-tuck', ['CMJ 落地收腿', '滯空法 − 真實髖上升', '落地膝屈曲警告', '髖位移交叉檢查警告'], D.rules.landing_tuck.map((r) => [N(`${r.tuck_cm} cm`), N(`${f(r.height_vs_com_bias_cm)} cm（${f(r.height_vs_com_bias_pct, 1)}%）`), N(pct(r.landing_knee_warning_rate)), N(pct(r.hip_vs_flight_warning_rate))]));
+tbl('t-scale', ['比例尺誤差', '跳躍高度偏差', '下蹲深度偏差'], D.rules.scale_error.map((r) => [N(`${r.scale_err_pct > 0 ? '+' : ''}${r.scale_err_pct}%`), N(`${f(r.height_bias_cm)} cm`), N(`${f(r.depth_bias_pct, 1)}%`)]));
+
+// ---------- noise & real
+tbl('t-noise', ['關鍵點雜訊', ...T.map((t) => `${t}：OK / Warn / Fail · 高度 LoA (cm)`)], [0, 1, 2].map((i) => {
+  const lab = { none: '無雜訊', official: '正式拍攝', poor: '品質差' }[D.noise_sensitivity.CMJ[i].noise];
+  return [`${lab}<span class="sub">σ ≈ ${f(D.noise_sensitivity.CMJ[i].keypoint_sd_cm)} cm</span>`, ...T.map((t) => { const r = D.noise_sensitivity[t][i]; return N(`${pct(r.status.OK)} / ${pct(r.status.Warning)} / ${pct(r.status.Fail)}<span class="sub">[${f(r.height_loa[0])}, ${f(r.height_loa[1])}]</span>`); })];
+}));
+$('real').innerHTML = `<b>真實影片檢查：</b>既有的兩支 30 fps MediaPipe 影片（${D.real_clips.map((r) => r.name).join('、')}）沒有開頭 1 秒靜止站立，jump3011 的相機也有移動，不符合拍攝流程。系統兩支都判 <span class="pill fail">Fail</span> 並說明原因（找不到靜止基準下的滯空），沒有輸出錯誤數值。這只說明系統會拒絕不合規影片，不構成準確度證據。`;
+
+// ---------- issues
+const iss = [
+  ['warn', '第二事件偵測器誤報偏高', `正常試跳中 ${pct(v.SJ.warnings.detectors_disagree)}–${pct(v.CMJ.warnings.detectors_disagree)} 因「兩個偵測器差 &gt; 2 幀」被標 Warning。網頁版的第二偵測器是足部速度法（SPEC 原為足部 ROI 幀差），起跳時刻平均晚約 ${f(v.CMJ.detectorB_takeoff_err_ms.mean, 0)}–${f(v.SJ.detectorB_takeoff_err_ms.mean, 0)} ms。建議：改回 ROI 幀差，或在 240 fps 時放寬到 3 幀；用 Kinovea 資料決定。`],
+  ['fail', 'SJ 保持帶寬 ±1 cm 對雜訊太敏感', `關鍵點雜訊約 1.3 cm 時，SJ 有 ${pct(D.noise_sensitivity.SJ[2].status.Fail)} 判 Fail（找不到 ≥ 1 秒保持階段）。正式拍攝雜訊下沒有問題。建議：以前測量到的靜止髖雜訊 σ 設定帶寬，例如 max(1 cm, 3σ)。`],
+  ['warn', 'SJ 反向動作的灰色地帶', `真實下沉 1.5 cm（低於 2 cm 門檻）時，有 ${pct(D.rules.sj_countermovement[3].flagged_rate)} 被判無效；≥ 2.5 cm 則 100% 判出。若希望門檻附近更嚴格或更寬鬆，需要決定可接受的誤判率。`],
+  ['warn', 'CMJ 動作開始時間偏晚', `依 SPEC 8.4 定義偵測，起跳時間偏差 ${f(v.CMJ.time_to_takeoff_ms.bias, 0)} ms（LoA ${f(v.CMJ.time_to_takeoff_ms.loaLow, 0)} 到 ${f(v.CMJ.time_to_takeoff_ms.loaHigh, 0)} ms），RSImod 因此略高估 ${f(v.CMJ.rsi_mod.bias, 3)} m/s。報告 RSImod 時應註明動作開始的定義。`],
+  ['ok', '高度與 GCT 不需調整', `跳躍高度、GCT、RSI、保持膝角、落下高度的偏差都在可忽略範圍；比例尺誤差 ±5% 對高度影響 &lt; 0.15 cm，只會按比例影響下蹲深度。`],
+];
+$('issues').innerHTML = iss.map(([k, h, b]) => `<div class="issue"><div class="head"><span class="pill ${k}">${k === 'ok' ? '維持' : k === 'fail' ? '優先' : '建議'}</span><h3>${h}</h3></div><p class="small">${b}</p></div>`).join('');
+
+$('foot').textContent = `資料：jumplens/public/validation/results.json · 產生於 ${new Date(D.generated).toLocaleString('zh-TW')}`;
+</script>

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.local
+
+# MediaPipe 執行檔與模型：npm run dev / build 時自動準備（scripts/setup-mediapipe.mjs）
+public/mediapipe/
+public/models/
+
+# 真實受試者的姿態資料不進 git（隱私）；只留在本機
+public/samples/

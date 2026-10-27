@@ -1,0 +1,365 @@
+<title>JumpLens 信效度驗證報告</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: single reading column (report), wide figure rows that break out to 2–3 columns; numbers in mono */
+:root {
+  --bg: #f5f6f4;
+  --paper: #ffffff;
+  --ink: #1b2024;
+  --muted: #5b646b;
+  --rule: #dde1de;
+  --accent: #1f5f8b;      /* lab blue */
+  --signal: #c2561a;      /* LoA / threshold lines */
+  --ok: #2f7a4b; --ok-bg: #e6f2ea;
+  --warn: #9a6a0b; --warn-bg: #fbf1dc;
+  --fail: #a93226; --fail-bg: #f9e4e1;
+  --dot: rgba(31, 95, 139, 0.42);
+  --f-display: 'Noto Serif TC', 'Songti TC', serif;
+  --f-body: 'Noto Sans TC', 'PingFang TC', system-ui, sans-serif;
+  --f-data: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121517; --paper: #1a1e21; --ink: #e5e8e6; --muted: #9aa3a8; --rule: #2c3236;
+    --accent: #7db4dc; --signal: #f08a4b; --ok: #6fcf95; --ok-bg: #16281e; --warn: #e9b949; --warn-bg: #2b2412;
+    --fail: #f08074; --fail-bg: #331b18; --dot: rgba(125, 180, 220, 0.5); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121517; --paper: #1a1e21; --ink: #e5e8e6; --muted: #9aa3a8; --rule: #2c3236;
+  --accent: #7db4dc; --signal: #f08a4b; --ok: #6fcf95; --ok-bg: #16281e; --warn: #e9b949; --warn-bg: #2b2412;
+  --fail: #f08074; --fail-bg: #331b18; --dot: rgba(125, 180, 220, 0.5); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.7 var(--f-body); }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+.prose { max-width: 68ch; }
+header { display: grid; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 24px; }
+.eyebrow { font: 500 12px/1 var(--f-data); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 700 clamp(28px, 4.4vw, 40px)/1.25 var(--f-display); margin: 0; text-wrap: balance; }
+h2 { font: 700 23px/1.35 var(--f-display); margin: 0; text-wrap: balance; }
+h3 { font: 700 16px/1.4 var(--f-body); margin: 0; }
+p { margin: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 22px; font: 13px/1.5 var(--f-data); color: var(--muted); }
+section { display: grid; gap: 18px; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head .num { font: 500 12px/1 var(--f-data); color: var(--muted); letter-spacing: 0.08em; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.mono, td.n, .stat b { font-family: var(--f-data); font-variant-numeric: tabular-nums; }
+.verdict { background: var(--paper); border: 1px solid var(--rule); border-left: 4px solid var(--accent); padding: 20px 22px; display: grid; gap: 12px; }
+.verdict ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.stat { background: var(--paper); padding: 16px 18px; display: grid; gap: 4px; align-content: start; }
+.stat span { font-size: 13px; color: var(--muted); }
+.stat b { font-size: 28px; font-weight: 500; line-height: 1.2; }
+.stat small { font-size: 12.5px; color: var(--muted); font-family: var(--f-data); }
+.tbl { overflow-x: auto; background: var(--paper); border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; font-size: 12.5px; color: var(--muted); letter-spacing: 0.04em; background: var(--bg); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n { white-space: nowrap; }
+td .sub { display: block; font-size: 12px; color: var(--muted); }
+.figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+figure { margin: 0; background: var(--paper); border: 1px solid var(--rule); padding: 14px 14px 10px; display: grid; gap: 6px; min-width: 0; }
+figcaption { font-size: 13px; color: var(--muted); }
+figure .t { font-weight: 700; font-size: 14px; }
+svg { width: 100%; height: auto; display: block; overflow: visible; }
+svg text { fill: var(--muted); font: 10.5px var(--f-data); }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+.pill { display: inline-block; font: 500 12px/1.6 var(--f-data); padding: 0 8px; border-radius: 99px; white-space: nowrap; }
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.fail { background: var(--fail-bg); color: var(--fail); }
+.issues { display: grid; gap: 12px; }
+.issue { background: var(--paper); border: 1px solid var(--rule); padding: 16px 18px; display: grid; gap: 6px; }
+.issue .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.note { background: var(--warn-bg); border: 1px solid var(--rule); padding: 14px 18px; font-size: 15px; }
+footer { border-top: 1px solid var(--rule); padding-top: 16px; font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+code { font-family: var(--f-data); font-size: 0.92em; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">JumpLens · Internal validation · Simulation study</div>
+    <h1>JumpLens 單機側拍跳躍分析：信效度驗證報告</h1>
+    <p class="prose muted">在已知真值的合成跳躍上，檢驗事件偵測、跳躍高度、GCT、RSI 等指標的準確度（效度）與重複性（信度），並找出正式真人驗證前需要調整的門檻。</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section>
+    <div class="verdict">
+      <h2>結論</h2>
+      <ul id="verdict"></ul>
+      <p class="small muted">這是內部模擬驗證：它證明演算法在已知真值下的表現，<b>不能取代</b>真人實測（Kinovea 人工標記、力板或 My Jump Lab、跨日重測）。真人驗證完成前，系統輸出應稱為「估計值」。</p>
+    </div>
+    <div class="stats" id="kpis"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">METHOD</span><h2>方法</h2></div>
+    <div class="prose" style="display:grid;gap:12px">
+      <p><b>合成跳躍模型。</b>以二維矢狀面連桿模型產生 CMJ、SJ、DJ：髖部垂直軌跡分段描述（靜止 → 下蹲 → 推蹬 → 拋物線滯空 → 緩衝 → 靜止），足部以腳尖為支點做蹠屈，膝關節以反運動學求得。每筆試跳隨機抽取身高（155–195 cm）、跳躍高度、下蹲深度、推蹬時間、腳尖離地速度爬升時間（4–15 ms）、SJ 保持膝角、DJ 箱高（30 / 40 cm）與 GCT（170–320 ms）。真實起跳、落地與觸地時刻是連續時間，不受取樣影響。</p>
+      <p><b>取樣與雜訊。</b>依指定幀率取樣（隨機相位），每個關鍵點加入白雜訊、低頻相關漂移（τ = 0.1 s）、偶發離群值與 1–4 幀遺失。正式拍攝條件的關鍵點雜訊約 0.58 cm（約 2 px，以 4.5 m 距離、約 3 mm/px 估算）。</p>
+      <p><b>受測程式。</b>與網頁使用的分析程式完全相同：短缺口內插、Hampel 去離群、四階零相位 Butterworth（事件 20 Hz、角度 12 Hz）、從空中最高點往兩側找起跳與落地、亞幀內插、偏差修正、高度 h = g·t<sub>f</sub>²/8。</p>
+      <p><b>統計。</b>效度以 Bland–Altman（偏差、95% 一致性界限）、ICC(A,1)（絕對一致，95% CI 以 1,000 次 bootstrap 估計）、MAE 與 Pearson r 表示。信度以 ICC、SEM = √MSE、MDC<sub>95</sub> = 1.96·√2·SEM 表示。參考值為模擬真值的滯空時間法高度，等同力板滯空時間法。ICC 程式已用 Shrout &amp; Fleiss (1979) 範例資料驗證（ICC(A,1) = 0.29、ICC(C,1) = 0.71）。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">1 · VALIDITY</span><h2>效標效度：240 fps 正式拍攝</h2></div>
+    <p class="prose small muted" id="validity-n"></p>
+    <div class="tbl"><table id="t-validity"></table></div>
+    <div class="figs" id="ba"></div>
+    <h3>次要指標</h3>
+    <div class="tbl"><table id="t-secondary"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">2 · BIAS CORRECTION</span><h2>SPEC 8.2 偏差修正的效果</h2></div>
+    <p class="prose">足部高度穿越閾值的時刻在真正離地之後、真正觸地之前，所以不修正會讓滯空時間變短、高度低估。以穿越處足部速度反推（t = t<sub>cross</sub> ∓ thr / |v|）可以消除這個系統誤差。</p>
+    <div class="two">
+      <figure><div class="t">高度偏差（%，系統 − 真值）</div><div id="fig-bias"></div><figcaption>每項 n = 150，同一批試跳只切換修正開關。</figcaption></figure>
+      <div class="tbl"><table id="t-bias"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">3 · FRAME RATE</span><h2>幀率敏感度</h2></div>
+    <p class="prose">同一批動作分別以 240、120、60、30 fps 取樣。低於 60 fps 時系統依規格不顯示 GCT 與 RSI。</p>
+    <div class="two">
+      <figure><div class="t">跳躍高度平均絕對誤差（cm）</div><div id="fig-fps"></div><figcaption id="fps-legend"></figcaption></figure>
+      <div class="tbl"><table id="t-fps"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">4 · RELIABILITY</span><h2>信度</h2></div>
+    <h3>(a) 儀器重複性</h3>
+    <p class="prose small muted">30 名模擬受試者，同一個真實動作做兩次獨立取樣與雜訊，等同兩套相同系統同時拍攝。只反映量測系統本身的誤差。</p>
+    <div class="tbl"><table id="t-inst"></table></div>
+    <h3>(b) 跨日重測</h3>
+    <p class="prose small muted" id="tr-assume"></p>
+    <div class="tbl"><table id="t-tr"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">5 · VALIDITY RULES</span><h2>有效性規則的判斷</h2></div>
+    <div class="two">
+      <figure><div class="t">SJ 反向動作：判為無效的比率</div><div id="fig-cm"></div><figcaption>橫軸為起跳前真實髖下沉量；虛線為規格門檻 2 cm。每點 n = 40。</figcaption></figure>
+      <div class="tbl"><table id="t-hold"></table></div>
+    </div>
+    <div class="two">
+      <div class="tbl"><table id="t-tuck"></table></div>
+      <div class="tbl"><table id="t-scale"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">6 · ROBUSTNESS</span><h2>雜訊敏感度與真實影片</h2></div>
+    <div class="tbl"><table id="t-noise"></table></div>
+    <p class="prose small" id="real"></p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">7 · DECISIONS NEEDED</span><h2>模擬發現、需要決定的事</h2></div>
+    <p class="prose small muted">規格門檻都沒有改動。以下是模擬顯示需要以前測資料調整，或需要研究者決定的地方。</p>
+    <div class="issues" id="issues"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="num">8 · NEXT</span><h2>限制與真人驗證計畫</h2></div>
+    <div class="prose" style="display:grid;gap:10px">
+      <ul style="margin:0;padding-left:20px;display:grid;gap:6px">
+        <li>模擬雜訊是獨立、近似高斯的；真實姿態估計在腳部遮擋、鞋子、光線變化時誤差更大，且可能有系統性偏移。</li>
+        <li>「滯空法高度」對比「真實髖上升」的差異取決於落地姿勢模型；本模型中伸直落地約低估 1.3 cm，收腿 5 cm 以上轉為高估。</li>
+        <li>跨日重測的生物變異（跨日 CV 4%、試跳間 CV 3%）是假設值，ICC 絕對值不應引用；可參考的是系統額外增加的 SEM。</li>
+        <li>瀏覽器版以 MediaPipe 取代 Sports2D；iPhone 慢動作檔經瀏覽器選取後是否保留 240 fps 尚未用真機確認。</li>
+      </ul>
+      <p><b>建議的真人驗證（SPEC 12.1）：</b>前 20–30 筆以 Kinovea 逐幀標記起跳與落地，和自動值做 Bland–Altman；同一批試跳以力板或 My Jump Lab 為參考算 ICC；同一受試者不同日重測算 ICC、SEM、MDC；網頁「總覽 → 驗證配對資料」可直接匯出自動與人工事件配對。</p>
+    </div>
+  </section>
+
+  <footer>
+    <span id="foot"></span>
+    <span>重跑：在 <code>jumplens/</code> 執行 <code>npm run validate</code>，再 <code>node validation/make-report.mjs</code>。</span>
+  </footer>
+</div>
+
+<script>
+const D = __DATA__;
+const T = ['CMJ', 'SJ', 'DJ'];
+const $ = (id) => document.getElementById(id);
+const f = (x, d = 2) => (x === undefined || x === null || !Number.isFinite(+x) ? '—' : (+x).toFixed(d));
+const pct = (x) => `${Math.round(x * 100)}%`;
+const loa = (b, d = 2) => `${f(b.bias, d)} [${f(b.loaLow, d)}, ${f(b.loaHigh, d)}]`;
+const tbl = (id, head, rows) => { $(id).innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td${typeof c === 'object' && c?.n ? ' class="n"' : ''}>${typeof c === 'object' && c ? c.v : c}</td>`).join('')}</tr>`).join('')}</tbody>`; };
+const N = (v) => ({ n: true, v });
+const v = D.validity, R = D.reliability;
+
+// ---------- meta / verdict / kpis
+$('meta').innerHTML = [`產生 ${new Date(D.generated).toLocaleDateString('zh-TW')}`, `每條件 n = ${D.n_per_condition}`, `信度 n = 30`, `執行 ${D.runtime_s} s`, `公式檢查 0.5 s → ${D.formula.flight_0_5s_cm} cm ${D.formula.pass ? '✓' : '✗'}`].map((s) => `<span>${s}</span>`).join('');
+const minIcc = Math.min(...T.map((t) => v[t].height_vs_flight_truth_icc));
+const bc = D.bias_correction;
+const f30 = D.fps_sensitivity.CMJ[3];
+$('verdict').innerHTML = [
+  `<b>240 fps 下跳躍高度效度很高：</b>三項測驗 ICC(A,1) ≥ ${f(minIcc, 3)}，偏差在 ±0.2 cm 內，95% 一致性界限約 ±1.5 cm。`,
+  `<b>SPEC 8.2 的偏差修正是必要的：</b>不修正會低估高度 ${f(-bc.CMJ.without_correction.height_bias_pct, 1)}–${f(-bc.DJ.without_correction.height_bias_pct, 1)}%，修正後 &lt; 1%。`,
+  `<b>DJ：</b>GCT 偏差 ${f(v.DJ.gct_ms.bias, 1)} ms（LoA ${f(v.DJ.gct_ms.loaLow, 1)} 到 ${f(v.DJ.gct_ms.loaHigh, 1)} ms），RSI 的 ICC ${f(v.DJ.rsi_icc, 3)}。`,
+  `<b>30 fps 不能當正式成果：</b>高度系統性高估 ${f(f30.height_bias_cm, 1)} cm、LoA ${f(f30.height_loa[0], 1)} 到 ${f(f30.height_loa[1], 1)} cm，支持 Live 值只標示 Preview。`,
+  `<b>需要調整的門檻：</b>第二事件偵測器在正常試跳上約 ${pct(Math.min(...T.map((t) => v[t].warnings.detectors_disagree)))}–${pct(Math.max(...T.map((t) => v[t].warnings.detectors_disagree)))} 誤報 Warning；SJ 的 ±1 cm 保持帶寬在姿態品質差時幾乎全部判 Fail（見第 7 節）。`,
+].map((s) => `<li>${s}</li>`).join('');
+$('kpis').innerHTML = [
+  ...T.map((t) => [`${t} 高度 ICC(A,1)`, f(v[t].height_vs_flight_truth_icc, 3), `95% CI ${v[t].height_icc_ci.map((x) => f(x, 3)).join('–')}`]),
+  ['CMJ 儀器 MDC₉₅', `${f(R.CMJ.instrument_official_240.mdc95, 1)} cm`, `SEM ${f(R.CMJ.instrument_official_240.sem, 2)} cm · 240 fps`],
+].map(([a, b, c]) => `<div class="stat"><span>${a}</span><b>${b}</b><small>${c}</small></div>`).join('');
+
+// ---------- validity table
+$('validity-n').textContent = `每項 n = ${v.CMJ.n}。數值為「系統 − 真值」的偏差 [95% 一致性界限]；事件時刻誤差為平均 ± SD。`;
+tbl('t-validity', ['指標', 'CMJ', 'SJ', 'DJ'], [
+  ['跳躍高度 (cm)', ...T.map((t) => N(`${loa(v[t].height_vs_flight_truth)}<span class="sub">MAE ${f(v[t].height_vs_flight_truth.mae)} · r ${f(v[t].height_vs_flight_truth.r, 4)}</span>`))],
+  ['起跳時刻 (ms)', ...T.map((t) => N(`${f(v[t].takeoff_err_ms.mean, 1)} ± ${f(v[t].takeoff_err_ms.sd, 1)}`))],
+  ['落地時刻 (ms)', ...T.map((t) => N(`${f(v[t].landing_err_ms.mean, 1)} ± ${f(v[t].landing_err_ms.sd, 1)}`))],
+  ['滯空時間 (ms)', ...T.map((t) => N(`${f(v[t].flight_err_ms.mean, 1)} ± ${f(v[t].flight_err_ms.sd, 1)}`))],
+  ['狀態', ...T.map((t) => `<span class="pill ok">OK ${pct(v[t].status.OK)}</span> <span class="pill warn">Warn ${pct(v[t].status.Warning)}</span> <span class="pill fail">Fail ${pct(v[t].status.Fail)}</span>`)],
+  ['Warning 主要來源', ...T.map((t) => `<span class="small">偵測器不一致 ${pct(v[t].warnings.detectors_disagree)}<br>落地膝屈曲 ${pct(v[t].warnings.landing_knee)}</span>`)],
+]);
+tbl('t-secondary', ['指標', '偏差 [95% LoA]', '其他'], [
+  ['CMJ 下蹲深度 (cm)', N(loa(v.CMJ.depth_cm)), N(`r ${f(v.CMJ.depth_cm.r, 4)}`)],
+  ['CMJ 起跳時間 (ms)', N(loa(v.CMJ.time_to_takeoff_ms, 1)), '動作開始依規格定義偵測，比真正開始晚'],
+  ['CMJ RSImod (m/s)', N(loa(v.CMJ.rsi_mod, 3)), N(`ICC ${f(v.CMJ.rsi_mod_icc, 3)}`)],
+  ['SJ 保持膝角 (°)', N(loa(v.SJ.hold_knee_deg)), `誤判反向動作 ${f(v.SJ.false_countermovement_rate * 100, 1)}%`],
+  ['DJ GCT (ms)', N(loa(v.DJ.gct_ms, 1)), N(`r ${f(v.DJ.gct_ms.r, 4)}`)],
+  ['DJ RSI (m/s)', N(loa(v.DJ.rsi, 3)), N(`ICC ${f(v.DJ.rsi_icc, 3)}`)],
+  ['DJ 落下高度 (cm)', N(loa(v.DJ.drop_height_cm)), N(`r ${f(v.DJ.drop_height_cm.r, 4)}`)],
+]);
+
+// ---------- SVG helpers
+const NS = 'http://www.w3.org/2000/svg';
+function svg(w, h) { const s = document.createElementNS(NS, 'svg'); s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('role', 'img'); return s; }
+function el(s, tag, attrs, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text !== undefined) e.textContent = text; s.appendChild(e); return e; }
+const lin = (d0, d1, r0, r1) => (x) => r0 + ((x - d0) / (d1 - d0)) * (r1 - r0);
+function ticks(lo, hi, n) { const step = (hi - lo) / n; return Array.from({ length: n + 1 }, (_, i) => lo + i * step); }
+
+function baPlot(test) {
+  const pts = D.ba_points[test], b = v[test].height_vs_flight_truth;
+  const W = 340, H = 230, m = { l: 34, r: 64, t: 10, b: 28 };
+  const xs = pts.map((p) => p.mean);
+  const x0 = Math.floor(Math.min(...xs) / 5) * 5, x1 = Math.ceil(Math.max(...xs) / 5) * 5;
+  const X = lin(x0, x1, m.l, W - m.r), Y = lin(-3, 3, H - m.b, m.t);
+  const s = svg(W, H);
+  for (const y of [-3, -2, -1, 0, 1, 2, 3]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)', 'stroke-width': 1 }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, y); }
+  const xt = ticks(x0, x1, 4);
+  for (const x of xt) el(s, 'text', { x: X(x), y: H - m.b + 16, 'text-anchor': 'middle' }, Math.round(x));
+  el(s, 'text', { x: (m.l + W - m.r) / 2, y: H - 1, 'text-anchor': 'middle' }, '平均高度 (cm)');
+  for (const p of pts) el(s, 'circle', { cx: X(p.mean), cy: Y(Math.max(-3, Math.min(3, p.diff))), r: 2.6, fill: 'var(--dot)' });
+  const line = (y, color, dash, label) => { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: color, 'stroke-width': 1.5, 'stroke-dasharray': dash }); el(s, 'text', { x: W - m.r + 4, y: Y(y) + 3.5, style: `fill:${color}` }, label); };
+  line(b.bias, 'var(--accent)', '', `偏差 ${f(b.bias)}`);
+  line(b.loaHigh, 'var(--signal)', '4 3', `+${f(b.loaHigh)}`);
+  line(b.loaLow, 'var(--signal)', '4 3', `${f(b.loaLow)}`);
+  return s;
+}
+$('ba').innerHTML = '';
+for (const t of T) {
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<div class="t">${t} Bland–Altman：跳躍高度</div>`;
+  fig.appendChild(baPlot(t));
+  const cap = document.createElement('figcaption'); cap.textContent = `系統 − 真值（cm）對平均；n = ${D.ba_points[t].length}`; fig.appendChild(cap);
+  $('ba').appendChild(fig);
+}
+
+// ---------- bias correction
+(() => {
+  const W = 400, H = 170, m = { l: 44, r: 16, t: 10, b: 26 };
+  const s = svg(W, H);
+  const X = lin(-10, 2, m.l, W - m.r);
+  for (const x of [-10, -8, -6, -4, -2, 0, 2]) { el(s, 'line', { x1: X(x), x2: X(x), y1: m.t, y2: H - m.b, stroke: x === 0 ? 'var(--muted)' : 'var(--rule)', 'stroke-width': 1 }); el(s, 'text', { x: X(x), y: H - m.b + 15, 'text-anchor': 'middle' }, `${x}%`); }
+  const band = (H - m.t - m.b) / 3;
+  T.forEach((t, i) => {
+    const y0 = m.t + i * band;
+    el(s, 'text', { x: m.l - 8, y: y0 + band / 2 + 4, 'text-anchor': 'end' }, t);
+    const on = bc[t].with_correction.height_bias_pct, off = bc[t].without_correction.height_bias_pct;
+    const bar = (val, y, color) => { const a = X(Math.min(0, val)), b = X(Math.max(0, val)); el(s, 'rect', { x: a, y, width: Math.max(1.5, b - a), height: band * 0.3, fill: color, rx: 2 }); el(s, 'text', { x: val < 0 ? a - 4 : b + 4, y: y + band * 0.24, 'text-anchor': val < 0 ? 'end' : 'start', style: `fill:${color}` }, `${f(val, 1)}%`); };
+    bar(off, y0 + band * 0.14, 'var(--signal)');
+    bar(on, y0 + band * 0.52, 'var(--accent)');
+  });
+  $('fig-bias').appendChild(s);
+  const lg = document.createElement('figcaption'); lg.innerHTML = '<span style="color:var(--signal)">■</span> 不修正　<span style="color:var(--accent)">■</span> 修正'; $('fig-bias').appendChild(lg);
+})();
+tbl('t-bias', ['', '高度偏差（修正）', '（不修正）', '起跳 / 落地時刻偏差（修正）', '（不修正）'], T.map((t) => {
+  const b = bc[t];
+  return [t, N(`${f(b.with_correction.height_bias_cm)} cm`), N(`${f(b.without_correction.height_bias_cm)} cm`), N(`${f(b.with_correction.takeoff_ms, 1)} / ${f(b.with_correction.landing_ms, 1)} ms`), N(`${f(b.without_correction.takeoff_ms, 1)} / ${f(b.without_correction.landing_ms, 1)} ms`)];
+}));
+
+// ---------- fps
+(() => {
+  const W = 400, H = 220, m = { l: 36, r: 16, t: 12, b: 28 };
+  const s = svg(W, H), cats = [240, 120, 60, 30];
+  const X = (i) => m.l + 16 + (i * (W - m.l - m.r - 32)) / 3, Y = lin(0, 2.5, H - m.b, m.t);
+  for (const y of [0, 0.5, 1, 1.5, 2, 2.5]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)' }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, y); }
+  cats.forEach((c, i) => el(s, 'text', { x: X(i), y: H - m.b + 16, 'text-anchor': 'middle' }, `${c} fps`));
+  const col = { CMJ: 'var(--accent)', SJ: 'var(--ok)', DJ: 'var(--signal)' };
+  for (const t of T) {
+    const ys = D.fps_sensitivity[t].map((r) => r.height_mae_cm);
+    el(s, 'polyline', { points: ys.map((y, i) => `${X(i)},${Y(y)}`).join(' '), fill: 'none', stroke: col[t], 'stroke-width': 2 });
+    ys.forEach((y, i) => el(s, 'circle', { cx: X(i), cy: Y(y), r: 3.2, fill: col[t] }));
+    el(s, 'text', { x: X(3) + 6, y: Y(ys[3]) + (t === 'SJ' ? 10 : t === 'DJ' ? 0 : -4), style: `fill:${col[t]}` }, t);
+  }
+  $('fig-fps').appendChild(s);
+  $('fps-legend').textContent = '同一批動作降取樣；每點 n = 75。';
+})();
+tbl('t-fps', ['fps', 'CMJ 高度偏差 [LoA] cm', 'DJ GCT 偏差 ± SD (ms)', 'DJ RSI 平均絕對誤差'], D.fps_sensitivity.CMJ.map((r, i) => {
+  const j = D.fps_sensitivity.DJ[i];
+  return [N(r.fps), N(`${f(r.height_bias_cm)} [${f(r.height_loa[0])}, ${f(r.height_loa[1])}]`), j.gct_hidden ? '不顯示（&lt; 60 fps）' : N(`${f(j.gct_bias_ms, 1)} ± ${f(j.gct_sd_ms, 1)}`), j.gct_hidden ? '—' : N(`${f(j.rsi_mae_pct, 1)}%`)];
+}));
+
+// ---------- reliability
+const cell = (x) => (x && x.icc_a1 !== undefined ? N(`${f(x.icc_a1, 3)}<span class="sub">[${x.icc_ci.map((c) => f(c, 3)).join('–')}] · SEM ${f(x.sem, 3)} · MDC₉₅ ${f(x.mdc95, 2)}</span>`) : '<span class="muted small">GCT / RSI 不顯示</span>');
+tbl('t-inst', ['', '指標', '240 fps 正式', '60 fps Live', '30 fps Live'], T.map((t) => [t, R[t].metric, cell(R[t].instrument_official_240), cell(R[t].instrument_live_60), cell(R[t].instrument_live_30)]));
+$('tr-assume').textContent = `30 名模擬受試者、2 天、每天 3 跳取平均。${R.CMJ.test_retest.assumptions}。表中「系統額外增加的 SEM」= √(SEM²系統 − SEM²真值)。`;
+tbl('t-tr', ['', '系統 ICC(A,1) [95% CI]', '系統 SEM / MDC₉₅', '真值 SEM / MDC₉₅', '系統額外增加的 SEM', '單次內 3 跳 ICC(C,1)'], T.map((t) => {
+  const x = R[t].test_retest;
+  return [t, N(`${f(x.system.icc_a1, 3)} [${x.system.icc_ci.map((c) => f(c, 3)).join('–')}]`), N(`${f(x.system.sem, 3)} / ${f(x.system.mdc95, 2)}`), N(`${f(x.true_values.sem, 3)} / ${f(x.true_values.mdc95, 2)}`), N(f(x.sem_added_by_system, 3)), N(f(x.intra_session_3_trials.icc_c1, 3))];
+}));
+
+// ---------- rules
+(() => {
+  const rows = D.rules.sj_countermovement;
+  const W = 400, H = 200, m = { l: 40, r: 16, t: 12, b: 30 };
+  const s = svg(W, H), X = lin(0, 4, m.l, W - m.r), Y = lin(0, 1, H - m.b, m.t);
+  for (const y of [0, 0.25, 0.5, 0.75, 1]) { el(s, 'line', { x1: m.l, x2: W - m.r, y1: Y(y), y2: Y(y), stroke: 'var(--rule)' }); el(s, 'text', { x: m.l - 6, y: Y(y) + 3.5, 'text-anchor': 'end' }, `${y * 100}%`); }
+  for (const x of [0, 1, 2, 3, 4]) el(s, 'text', { x: X(x), y: H - m.b + 16, 'text-anchor': 'middle' }, `${x} cm`);
+  el(s, 'line', { x1: X(2), x2: X(2), y1: m.t, y2: H - m.b, stroke: 'var(--signal)', 'stroke-dasharray': '4 3', 'stroke-width': 1.5 });
+  el(s, 'text', { x: X(2) + 4, y: m.t + 10, style: 'fill:var(--signal)' }, '門檻 2 cm');
+  el(s, 'polyline', { points: rows.map((r) => `${X(r.dip_cm)},${Y(r.flagged_rate)}`).join(' '), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2 });
+  rows.forEach((r) => { el(s, 'circle', { cx: X(r.dip_cm), cy: Y(r.flagged_rate), r: 3.5, fill: 'var(--accent)' }); el(s, 'text', { x: X(r.dip_cm), y: Y(r.flagged_rate) - 7, 'text-anchor': 'middle' }, pct(r.flagged_rate)); });
+  $('fig-cm').appendChild(s);
+})();
+tbl('t-hold', ['SJ 真實保持膝角', '量測（平均 ± SD）', '判 Fail'], D.rules.sj_hold_angle.map((r) => [N(`${r.true_knee_deg}°${r.truly_out_of_range ? ' <span class="pill fail">超出 80–100°</span>' : ''}`), N(`${f(r.measured_mean, 1)} ± ${f(r.measured_sd, 2)}`), N(pct(r.flagged_rate))]));
+tbl('t-tuck', ['CMJ 落地收腿', '滯空法 − 真實髖上升', '落地膝屈曲警告', '髖位移交叉檢查警告'], D.rules.landing_tuck.map((r) => [N(`${r.tuck_cm} cm`), N(`${f(r.height_vs_com_bias_cm)} cm（${f(r.height_vs_com_bias_pct, 1)}%）`), N(pct(r.landing_knee_warning_rate)), N(pct(r.hip_vs_flight_warning_rate))]));
+tbl('t-scale', ['比例尺誤差', '跳躍高度偏差', '下蹲深度偏差'], D.rules.scale_error.map((r) => [N(`${r.scale_err_pct > 0 ? '+' : ''}${r.scale_err_pct}%`), N(`${f(r.height_bias_cm)} cm`), N(`${f(r.depth_bias_pct, 1)}%`)]));
+
+// ---------- noise & real
+tbl('t-noise', ['關鍵點雜訊', ...T.map((t) => `${t}：OK / Warn / Fail · 高度 LoA (cm)`)], [0, 1, 2].map((i) => {
+  const lab = { none: '無雜訊', official: '正式拍攝', poor: '品質差' }[D.noise_sensitivity.CMJ[i].noise];
+  return [`${lab}<span class="sub">σ ≈ ${f(D.noise_sensitivity.CMJ[i].keypoint_sd_cm)} cm</span>`, ...T.map((t) => { const r = D.noise_sensitivity[t][i]; return N(`${pct(r.status.OK)} / ${pct(r.status.Warning)} / ${pct(r.status.Fail)}<span class="sub">[${f(r.height_loa[0])}, ${f(r.height_loa[1])}]</span>`); })];
+}));
+$('real').innerHTML = `<b>真實影片檢查：</b>既有的兩支 30 fps MediaPipe 影片（${D.real_clips.map((r) => r.name).join('、')}）沒有開頭 1 秒靜止站立，jump3011 的相機也有移動，不符合拍攝流程。系統兩支都判 <span class="pill fail">Fail</span> 並說明原因（找不到靜止基準下的滯空），沒有輸出錯誤數值。這只說明系統會拒絕不合規影片，不構成準確度證據。`;
+
+// ---------- issues
+const iss = [
+  ['warn', '第二事件偵測器誤報偏高', `正常試跳中 ${pct(v.SJ.warnings.detectors_disagree)}–${pct(v.CMJ.warnings.detectors_disagree)} 因「兩個偵測器差 &gt; 2 幀」被標 Warning。網頁版的第二偵測器是足部速度法（SPEC 原為足部 ROI 幀差），起跳時刻平均晚約 ${f(v.CMJ.detectorB_takeoff_err_ms.mean, 0)}–${f(v.SJ.detectorB_takeoff_err_ms.mean, 0)} ms。建議：改回 ROI 幀差，或在 240 fps 時放寬到 3 幀；用 Kinovea 資料決定。`],
+  ['fail', 'SJ 保持帶寬 ±1 cm 對雜訊太敏感', `關鍵點雜訊約 1.3 cm 時，SJ 有 ${pct(D.noise_sensitivity.SJ[2].status.Fail)} 判 Fail（找不到 ≥ 1 秒保持階段）。正式拍攝雜訊下沒有問題。建議：以前測量到的靜止髖雜訊 σ 設定帶寬，例如 max(1 cm, 3σ)。`],
+  ['warn', 'SJ 反向動作的灰色地帶', `真實下沉 1.5 cm（低於 2 cm 門檻）時，有 ${pct(D.rules.sj_countermovement[3].flagged_rate)} 被判無效；≥ 2.5 cm 則 100% 判出。若希望門檻附近更嚴格或更寬鬆，需要決定可接受的誤判率。`],
+  ['warn', 'CMJ 動作開始時間偏晚', `依 SPEC 8.4 定義偵測，起跳時間偏差 ${f(v.CMJ.time_to_takeoff_ms.bias, 0)} ms（LoA ${f(v.CMJ.time_to_takeoff_ms.loaLow, 0)} 到 ${f(v.CMJ.time_to_takeoff_ms.loaHigh, 0)} ms），RSImod 因此略高估 ${f(v.CMJ.rsi_mod.bias, 3)} m/s。報告 RSImod 時應註明動作開始的定義。`],
+  ['ok', '高度與 GCT 不需調整', `跳躍高度、GCT、RSI、保持膝角、落下高度的偏差都在可忽略範圍；比例尺誤差 ±5% 對高度影響 &lt; 0.15 cm，只會按比例影響下蹲深度。`],
+];
+$('issues').innerHTML = iss.map(([k, h, b]) => `<div class="issue"><div class="head"><span class="pill ${k}">${k === 'ok' ? '維持' : k === 'fail' ? '優先' : '建議'}</span><h3>${h}</h3></div><p class="small">${b}</p></div>`).join('');
+
+$('foot').textContent = `資料：jumplens/public/validation/results.json · 產生於 ${new Date(D.generated).toLocaleString('zh-TW')}`;
+</script>
